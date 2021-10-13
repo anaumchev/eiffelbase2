@@ -82,6 +82,10 @@ feature -- Initialization
 				create array.copy_ (other.array)
 				other.wrap
 				sequence := other.sequence
+			else
+		                array.wipe_out
+                		row_count := 0
+                		column_count := 0
 			end
 		ensure then
 			sequence_effect: sequence ~ other.sequence
