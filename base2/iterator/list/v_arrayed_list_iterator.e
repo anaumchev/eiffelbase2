@@ -78,7 +78,11 @@ feature -- Initialization
 				index := other.index
 				check target.inv end
 				wrap
-			end
+			else
+                		unwrap
+                		index := 0
+                		wrap
+    			end
 		ensure then
 			target_effect: target = other.target
 			index_effect: index_ = other.index_
