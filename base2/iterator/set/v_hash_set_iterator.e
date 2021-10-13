@@ -79,7 +79,11 @@ feature -- Initialization
 				iterator.go_to_other (other.iterator)
 				check iterator.inv_only ("index_constraint", "target_domain_constraint", "value_sequence_definition") end
 				wrap
-			end
+    			else
+                    		unwrap
+                		index_ := 0
+                		wrap
+    			end
 		ensure
 			target_effect: target = old other.target
 			index_effect: index_ = old other.index_
