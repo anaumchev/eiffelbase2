@@ -41,6 +41,8 @@ feature -- Initialization
 				other.unwrap
 				list.copy_ (other.list)
 				other.wrap
+			else
+                		list.wipe_out
 			end
 		ensure then
 			sequence_effect: sequence ~ other.sequence
