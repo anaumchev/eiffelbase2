@@ -87,7 +87,13 @@ feature -- Initialization
 				check target.inv_only ("bag_definition", "cells_domain") end
 				target.lemma_cells_distinct
 				wrap
-			end
+        		else
+                		unwrap
+                		index_ := 0
+                		after_ := False
+                		active := Void
+                		wrap
+    			end
 		ensure
 			target_effect: target = other.target
 			index_effect: index_ = other.index_
