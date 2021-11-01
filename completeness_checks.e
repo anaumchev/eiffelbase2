@@ -109,4 +109,22 @@ feature
             a1.is_equal_ (a2)
         end
 
+    v_array_clear (a1, a2: V_ARRAY [G]; l, u: INTEGER)
+        note
+            explicit: wrapping
+        require
+            a1.is_equal_ (a2)
+            l_not_too_small: l >= a1.lower_
+			u_not_too_large: u <= a1.upper_
+			l_not_too_large: l <= u + 1
+            across a1.observers as o all o.item.is_open end
+            across a2.observers as o all o.item.is_open end
+            modify (a1, a2)
+        do
+            a1.clear (l, u)
+            a2.clear (l, u)
+        ensure
+            a1.is_equal_ (a2)
+        end
+
 end
