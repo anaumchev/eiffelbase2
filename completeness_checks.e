@@ -208,4 +208,13 @@ feature
             a1.is_equal_ (a2)
         end
 
+   v_linked_stack_default_create
+        local
+            ls1, ls2: V_LINKED_STACK [G]
+        do
+            create ls1
+            create ls2
+            check ls1.is_equal_(ls2) end
+        end
+
 end
