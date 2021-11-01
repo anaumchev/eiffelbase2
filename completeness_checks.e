@@ -115,8 +115,8 @@ feature
         require
             a1.is_equal_ (a2)
             l_not_too_small: l >= a1.lower_
-			u_not_too_large: u <= a1.upper_
-			l_not_too_large: l <= u + 1
+	    u_not_too_large: u <= a1.upper_
+	    l_not_too_large: l <= u + 1
             across a1.observers as o all o.item.is_open end
             across a2.observers as o all o.item.is_open end
             modify (a1, a2)
@@ -152,7 +152,7 @@ feature
             explicit: wrapping
         require
             a1.is_equal_ (a2)
-    		valid_indexes: l <= u + 1
+    	    valid_indexes: l <= u + 1
             across a1.observers as o all o.item.is_open end
             across a2.observers as o all o.item.is_open end
             modify_model (["sequence", "lower_"], [a1, a2])
@@ -174,6 +174,21 @@ feature
         do
             a1.include (i)
             a2.include (i)
+        ensure
+            a1.is_equal_ (a2)
+        end
+	
+    v_array_force (a1, a2: V_ARRAY [G]; i: INTEGER; v: G)
+        note
+            explicit: wrapping
+        require
+            a1.is_equal_ (a2)
+            across a1.observers as o all o.item.is_open end
+            across a2.observers as o all o.item.is_open end
+            modify_model (["sequence", "lower_"], [a1, a2])
+        do
+            a1.force (v, i)
+            a2.force (v, i)
         ensure
             a1.is_equal_ (a2)
         end
