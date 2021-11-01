@@ -31,5 +31,23 @@ feature
         ensure
             a1.item (i) = a2.item (i)
         end
+        
+    v_array_subarray (a1, a2: V_ARRAY [G]; l, u: INTEGER; v: G)
+        note
+            explicit: wrapping
+        require
+            a1.is_equal_ (a2)
+    		l_not_too_small: l >= a1.lower_
+			u_not_too_large: u <= a2.upper_
+			l_not_too_large: l <= u + 1
+            modify_model ("observers", a1)
+            modify_model ("observers", a2)            
+        local
+            a1_sub, a2_sub: V_ARRAY [G]
+        do
+            a1_sub := a1.subarray (l, u)
+            a2_sub := a2.subarray (l, u)
+            check a1_sub.is_equal_ (a2_sub) end
+        end
 
 end
