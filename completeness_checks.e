@@ -23,4 +23,13 @@ feature
             check a1.is_equal_(a2) end
         end
 
+    v_array_item (a1, a2: V_ARRAY [G]; i: INTEGER; v: G)
+        require
+            a1.is_equal_ (a2)
+            a1.has_index (i)
+        do
+        ensure
+            a1.item (i) = a2.item (i)
+        end
+
 end
