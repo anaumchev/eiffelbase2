@@ -127,4 +127,24 @@ feature
             a1.is_equal_ (a2)
         end
 
+    v_array_copy_range_within (a1, a2: V_ARRAY [G]; fst, lst, index: INTEGER)
+        note
+            explicit: wrapping
+        require
+            a1.is_equal_ (a2)
+    	    first_not_too_small: fst >= a1.lower_
+	    last_not_too_large: lst <= a1.upper_
+	    first_not_too_large: fst <= lst + 1
+	    index_not_too_small: index >= a1.lower_
+	    enough_space: a1.upper_ - index >= lst - fst
+            across a1.observers as o all o.item.is_open end
+            across a2.observers as o all o.item.is_open end
+            modify (a1, a2)
+        do
+            a1.copy_range_within (fst, lst, index)
+            a2.copy_range_within (fst, lst, index)
+        ensure
+            a1.is_equal_ (a2)
+        end
+
 end
