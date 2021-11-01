@@ -163,4 +163,19 @@ feature
             a1.is_equal_ (a2)
         end
 
+    v_array_include (a1, a2: V_ARRAY [G]; i: INTEGER)
+        note
+            explicit: wrapping
+        require
+            a1.is_equal_ (a2)
+            across a1.observers as o all o.item.is_open end
+            across a2.observers as o all o.item.is_open end
+            modify_model (["sequence", "lower_"], [a1, a2])
+        do
+            a1.include (i)
+            a2.include (i)
+        ensure
+            a1.is_equal_ (a2)
+        end
+
 end
