@@ -216,5 +216,14 @@ feature
             create ls2
             check ls1.is_equal_(ls2) end
         end
+	
+    v_linked_stack_item (ls1, ls2: V_LINKED_STACK [G])
+        require
+            ls1.is_equal_ (ls2)
+            not ls1.is_empty
+        do
+        ensure
+            ls1.item = ls2.item
+        end
 
 end
