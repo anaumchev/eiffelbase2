@@ -147,4 +147,20 @@ feature
             a1.is_equal_ (a2)
         end
 
+    v_array_resize (a1, a2: V_ARRAY [G]; l, u: INTEGER)
+        note
+            explicit: wrapping
+        require
+            a1.is_equal_ (a2)
+    		valid_indexes: l <= u + 1
+            across a1.observers as o all o.item.is_open end
+            across a2.observers as o all o.item.is_open end
+            modify_model (["sequence", "lower_"], [a1, a2])
+        do
+            a1.resize (l, u)
+            a2.resize (l, u)
+        ensure
+            a1.is_equal_ (a2)
+        end
+
 end
