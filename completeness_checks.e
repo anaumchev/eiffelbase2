@@ -59,5 +59,20 @@ feature
             a1.upper = a2.upper
             a1.count = a2.count
         end
+	
+    v_array_at (a1, a2: V_ARRAY [G]; i: INTEGER)
+        note
+            explicit: wrapping
+        require
+            a1.is_equal_ (a2)
+            a1.has_index (i)
+            modify (a1, a2)
+        local
+            i1, i2: V_ARRAY_ITERATOR [G]
+        do
+            i1 := a1.at (i)
+            i2 := a2.at (i)
+            check i1.is_equal_ (i2) end
+        end
 
 end
