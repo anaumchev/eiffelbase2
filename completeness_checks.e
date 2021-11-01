@@ -37,9 +37,9 @@ feature
             explicit: wrapping
         require
             a1.is_equal_ (a2)
-    		l_not_too_small: l >= a1.lower_
-			u_not_too_large: u <= a2.upper_
-			l_not_too_large: l <= u + 1
+    	    l_not_too_small: l >= a1.lower_
+	    u_not_too_large: u <= a2.upper_
+	    l_not_too_large: l <= u + 1
             modify_model ("observers", a1)
             modify_model ("observers", a2)            
         local
@@ -48,6 +48,16 @@ feature
             a1_sub := a1.subarray (l, u)
             a2_sub := a2.subarray (l, u)
             check a1_sub.is_equal_ (a2_sub) end
+        end
+
+    v_array_lower_upper_count (a1, a2: V_ARRAY [G])
+        require
+            a1.is_equal_ (a2)
+        do
+        ensure
+            a1.lower = a2.lower
+            a1.upper = a2.upper
+            a1.count = a2.count
         end
 
 end
