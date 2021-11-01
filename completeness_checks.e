@@ -225,5 +225,13 @@ feature
         ensure
             ls1.item = ls2.item
         end
+	
+    v_linked_stack_count (ls1, ls2: V_LINKED_STACK [G])
+        require
+            ls1.is_equal_ (ls2)
+        do
+        ensure
+            ls1.count = ls2.count
+        end
 
 end
