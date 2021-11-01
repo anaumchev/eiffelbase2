@@ -193,4 +193,19 @@ feature
             a1.is_equal_ (a2)
         end
 
+    v_array_wipe_out (a1, a2: V_ARRAY [G])
+        note
+            explicit: wrapping
+        require
+            a1.is_equal_ (a2)
+            across a1.observers as o all o.item.is_open end
+            across a2.observers as o all o.item.is_open end
+            modify_model (["sequence", "lower_"], [a1, a2])
+        do
+            a1.wipe_out
+            a2.wipe_out
+        ensure
+            a1.is_equal_ (a2)
+        end
+
 end
