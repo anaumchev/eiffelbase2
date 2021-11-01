@@ -74,5 +74,21 @@ feature
             i2 := a2.at (i)
             check i1.is_equal_ (i2) end
         end
+	
+    v_array_put (a1, a2: V_ARRAY [G]; v: G; i: INTEGER)
+        note
+            explicit: wrapping
+        require
+            a1.is_equal_ (a2)
+            a1.has_index (i)
+            across a1.observers as o all o.item.is_open end
+            across a2.observers as o all o.item.is_open end
+            modify (a1, a2)
+        do
+            a1.put (v, i)
+            a2.put (v, i)
+        ensure
+            a1.is_equal_ (a2)
+        end
 
 end
