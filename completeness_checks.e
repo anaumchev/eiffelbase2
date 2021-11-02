@@ -7,6 +7,14 @@ feature
 	    a1.is_equal_ (a2)
 	do
         ensure
+    	    a1.count = a2.count
+        end
+
+    v_array2_column_count (a1, a2: V_ARRAY2 [G]; i: INTEGER)
+    	require
+	    a1.is_equal_ (a2)
+	do
+        ensure
     	    a1.column_count = a2.column_count
         end
 
