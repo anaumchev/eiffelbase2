@@ -2,6 +2,17 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
 
+    v_array2_make (n, m: INTEGER)
+    	require
+			valid_dimensions: (n = 0 and m = 0) or (n > 0 and m > 0)
+        local
+            a1, a2: V_ARRAY2 [G]
+		do
+            create a1.make (n, m)
+            create a2.make (n, m)
+            check a1.is_equal_ (a2) end
+        end
+
     v_linked_stack_wipe_out (ls1, ls2: V_LINKED_STACK [G])
         require
             ls1.is_equal_ (ls2)
