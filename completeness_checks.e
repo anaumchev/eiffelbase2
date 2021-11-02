@@ -1,6 +1,23 @@
 note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
+    
+    v_array_iterator_put (ai1, ai2: V_ARRAY_ITERATOR [G]; v: G)
+    	require
+            ai1.is_equal_ (ai2)
+            ai1 /= ai2
+            not ai1.off
+            not ai2.off
+            across ai1.target.observers as o all o.item /= Current implies o.item.is_open end
+            across ai2.target.observers as o all o.item /= Current implies o.item.is_open end
+            modify_model (["sequence", "box"], [ai1, ai2])
+	    modify_model ("bag", [ai1.target, ai2.target])
+        do
+            ai1.put (v)
+            ai2.put (v)
+        ensure
+            ai1.is_equal_ (ai2)
+        end
 
     v_array_iterator_target  (ai1, ai2: V_ARRAY_ITERATOR [G])
     	require
