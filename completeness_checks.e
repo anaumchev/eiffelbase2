@@ -2,6 +2,15 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
     
+    v_arrayed_list_item (al1, al2: V_ARRAYED_LIST [G]; i: INTEGER)
+    	require
+            al1.is_equal_ (al2)
+            al1.has_index (i)
+        do
+        ensure
+            al1.item (i) ~ al2.item (i)
+        end    
+    
     v_arrayed_list_copy (al1, al2, other: V_ARRAYED_LIST [G])
     	require
             across al1.observers as o all o.item.is_open end
