@@ -2,6 +2,20 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
     
+    v_arrayed_list_copy (al1, al2, other: V_ARRAYED_LIST [G])
+    	require
+            across al1.observers as o all o.item.is_open end
+            across al2.observers as o all o.item.is_open end
+            modify_model ("sequence", [al1, al2])
+            modify_field ("closed", other)
+            al1.is_equal_ (al2)
+        do
+            al1.copy_ (other)
+            al2.copy_ (other)
+        ensure
+            al1.is_equal_ (al2)
+        end    
+    
     v_arrayed_list_default_create
         local
             al1, al2: V_ARRAYED_LIST [G]
