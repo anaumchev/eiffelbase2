@@ -2,6 +2,22 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
 
+    v_array_iterator_copy_  (ai1, ai2, other: V_ARRAY_ITERATOR [G])
+    	require
+            target_wrapped: ai1.target.is_wrapped
+            target_wrapped: ai2.target.is_wrapped
+            other_target_wrapped: other.target.is_wrapped
+            modify (ai1, ai2)
+            modify_model ("observers", [ai1.target, ai2.target, other.target])
+            ai1.is_equal_ (ai2)
+            ai1 /= other
+        do
+            ai1.copy_ (other)
+            ai2.copy_ (other)
+        ensure
+            ai1.is_equal_ (ai2)
+        end
+
     v_array2_flat_put  (a1, a2: V_ARRAY2 [G]; v: G; i: INTEGER)
     	require
             a1.has_index (i)
