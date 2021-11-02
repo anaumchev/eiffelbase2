@@ -1,6 +1,19 @@
 -- Here you can try your own examples. Have fun! :)
 class COMPLETENESS_CHECKS [G]
 feature
+    v_linked_stack_extend (ls1, ls2: V_LINKED_STACK [G]; v: G)
+        require
+            ls1.is_equal_ (ls2)
+            modify (ls1, ls2)
+            ls1.observers.is_empty
+            ls2.observers.is_empty
+        do
+            ls1.extend (v)
+            ls2.extend (v)
+        ensure
+            ls1.is_equal_ (ls2)
+        end
+
     v_array_make (l, u: INTEGER)
         require
             l <= u + 1
