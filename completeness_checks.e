@@ -2,10 +2,10 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
 
-    v_array2_copy_ (a1, a2, other: V_ARRAY [G])
-    	require
+    v_array2_copy_ (a1, a2, other: V_ARRAY2 [G])
+        require
 	    a1.is_equal_ (a2)
-            modify (a1, a2)
+            modify (a1, a2, other)
             across a1.observers as o all o.item.is_open end
             across a2.observers as o all o.item.is_open end
 	do
