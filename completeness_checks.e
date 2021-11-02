@@ -2,7 +2,7 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
 
-    v_array2_upper (a1, a2: V_ARRAY2 [G]; i: INTEGER)
+    v_array2_upper (a1, a2: V_ARRAY2 [G])
         require
             a1.is_equal_ (a2)
         do
@@ -10,7 +10,7 @@ feature
             a1.upper = a2.upper
         end
 
-    v_array2_Lower (a1, a2: V_ARRAY2 [G]; i: INTEGER)
+    v_array2_Lower (a1, a2: V_ARRAY2 [G])
         require
             a1.is_equal_ (a2)
         do
@@ -46,7 +46,7 @@ feature
     	    a1.flat_index (i, j) = a2.flat_index (i, j)
         end
 
-    v_array2_column_count (a1, a2: V_ARRAY2 [G]; i: INTEGER)
+    v_array2_column_count (a1, a2: V_ARRAY2 [G])
     	require
 	    a1.is_equal_ (a2)
 	do
@@ -54,7 +54,7 @@ feature
     	    a1.count = a2.count
         end
 
-    v_array2_column_count (a1, a2: V_ARRAY2 [G]; i: INTEGER)
+    v_array2_column_count (a1, a2: V_ARRAY2 [G])
     	require
 	    a1.is_equal_ (a2)
 	do
@@ -62,7 +62,7 @@ feature
     	    a1.column_count = a2.column_count
         end
 
-    v_array2_row_count (a1, a2: V_ARRAY2 [G]; i: INTEGER)
+    v_array2_row_count (a1, a2: V_ARRAY2 [G])
     	require
 	    a1.is_equal_ (a2)
 	do
