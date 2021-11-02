@@ -2,6 +2,14 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
 
+    v_array_iterator_target  (ai1, ai2: V_ARRAY_ITERATOR [G])
+    	require
+            ai1.is_equal_ (ai2)
+        do
+        ensure
+            ai1.target ~ ai2.target
+        end
+
     v_array_iterator_copy_  (ai1, ai2, other: V_ARRAY_ITERATOR [G])
     	require
             target_wrapped: ai1.target.is_wrapped
