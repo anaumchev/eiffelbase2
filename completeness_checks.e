@@ -2,6 +2,18 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
 
+    v_array2_flat_at  (a1, a2: V_ARRAY2 [G]; i: INTEGER)
+        require
+            a1.is_equal_ (a2)
+            modify (a1, a2)
+        local
+            ai1, ai2: V_ARRAY_ITERATOR [G]
+        do
+            ai1 := a1.flat_at (i)
+            ai2 := a2.flat_at (i)
+            check ai1.is_equal_ (ai2) end
+        end
+
     v_array2_has_column (a1, a2: V_ARRAY2 [G]; i: INTEGER)
         require
             a1.is_equal_ (a2)
