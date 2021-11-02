@@ -234,4 +234,17 @@ feature
             ls1.count = ls2.count
         end
 
+    v_linked_stack_new_cursor (ls1, ls2: V_LINKED_STACK [G])
+        require
+            ls1.is_equal_ (ls2)
+            modify (ls1, ls2)
+        local
+            lsi1, lsi2: V_LINKED_STACK_ITERATOR [G]
+        do
+            lsi1 := ls1.new_cursor
+            lsi2 := ls2.new_cursor
+            check target: ls1.is_equal_ (ls2) end
+            check return: lsi1.is_equal_ (lsi2) end
+        end
+
 end
