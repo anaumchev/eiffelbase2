@@ -2,6 +2,19 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
     
+    v_arrayed_list_at (al1, al2: V_ARRAYED_LIST [G]; i: INTEGER)
+    	require
+            al1.is_equal_ (al2)
+            al1.has_index (i)
+            modify_field (["observers", "closed"], [al1, al2])
+        local
+            ali1, ali2: V_ARRAYED_LIST_ITERATOR [G]
+        do
+            ali1 := al1.at (i)
+            ali2 := al2.at (i)
+            check ali1.is_equal_ (ali2) end
+        end    
+    
     v_arrayed_list_item (al1, al2: V_ARRAYED_LIST [G]; i: INTEGER)
     	require
             al1.is_equal_ (al2)
