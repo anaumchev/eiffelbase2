@@ -2,6 +2,15 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
     
+    v_arrayed_list_default_create
+        local
+            al1, al2: V_ARRAYED_LIST [G]
+        do
+            create al1
+            create al2
+            check al1.is_equal_ (al2) end
+        end
+    
     v_array_iterator_put (ai1, ai2: V_ARRAY_ITERATOR [G]; v: G)
     	require
             ai1.is_equal_ (ai2)
