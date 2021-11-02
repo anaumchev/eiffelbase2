@@ -2,6 +2,21 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
 
+    v_array2_put (a1, a2: V_ARRAY2 [G]; v: G; i, j: INTEGER)
+    	require
+            valid_row: a1.has_row (i)
+            valid_column: a1.has_column (j)
+            observers_open: across a1.observers as o all o.item.is_open end
+            observers_open: across a2.observers as o all o.item.is_open end
+            modify_model ("sequence", [a1, a2])
+            a1.is_equal_ (a2)
+        do
+            a1.put (v, i, j)
+            a2.put (v, i, j)
+        ensure
+            a1.is_equal_ (a2)
+        end
+
     v_array2_flat_at  (a1, a2: V_ARRAY2 [G]; i: INTEGER)
         require
             a1.is_equal_ (a2)
