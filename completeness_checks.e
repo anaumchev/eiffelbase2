@@ -2,6 +2,21 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
 
+    v_arrayed_list_prepend (al1, al2: V_ARRAYED_LIST [G]; input: V_ITERATOR [G])
+    	require
+            al1.is_equal_ (al2)
+            across al1.observers as o all o.item.is_open end
+            across al2.observers as o all o.item.is_open end
+            modify (al1, al2, input)
+            input.target.is_wrapped
+            not input.before
+        do
+            al1.prepend (input)
+            al2.prepend (input)
+        ensure
+            al1.is_equal_ (al2)
+        end
+	
     v_arrayed_list_extend_at (al1, al2: V_ARRAYED_LIST [G]; v: G; i: INTEGER)
     	require
             al1.is_equal_ (al2)
