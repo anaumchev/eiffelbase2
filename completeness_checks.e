@@ -2,6 +2,16 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
 
+    v_array2_flat_index (a1, a2: V_ARRAY2 [G]; i, j: INTEGER)
+    	require
+	    1 <= i and i <= a1.row_count
+	    1 <= j and j <= a1.column_count
+	    a1.is_equal_ (a2)
+	do
+        ensure
+    	    a1.flat_index (i, j) = a2.flat_index (i, j)
+        end
+
     v_array2_column_count (a1, a2: V_ARRAY2 [G]; i: INTEGER)
     	require
 	    a1.is_equal_ (a2)
