@@ -2,6 +2,15 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
 
+    v_array2_flat_item (a1, a2: V_ARRAY2 [G]; i: INTEGER)
+    	require
+	    a1.is_equal_ (a2)
+            a1.has_index (i)
+	do
+        ensure
+    	    a1.flat_item (i) ~ a2.flat_item (i)
+        end
+
     v_array2_item (a1, a2: V_ARRAY2 [G]; i, j: INTEGER)
     	require
 	    a1.is_equal_ (a2)
