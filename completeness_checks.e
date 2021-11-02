@@ -2,6 +2,19 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
 
+    v_array2_copy_ (a1, a2, other: V_ARRAY [G])
+    	require
+	    a1.is_equal_ (a2)
+            modify (a1, a2)
+            across a1.observers as o all o.item.is_open end
+            across a2.observers as o all o.item.is_open end
+	do
+            a1.copy_ (other)
+            a2.copy_ (other)
+        ensure
+    	    a1.is_equal_ (a2)
+        end
+
     v_array2_make_filled (n, m: INTEGER; v: G)
     	require
 	    valid_dimensions: (n = 0 and m = 0) or (n > 0 and m > 0)
