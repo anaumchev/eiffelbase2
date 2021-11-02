@@ -2,6 +2,14 @@ note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
 
+    v_array2_has_column (a1, a2: V_ARRAY2 [G]; i: INTEGER)
+        require
+            a1.is_equal_ (a2)
+        do
+        ensure
+            a1.has_column (i) = a2.has_column (i)
+        end
+
     v_array2_has_row (a1, a2: V_ARRAY2 [G]; i: INTEGER)
         require
             a1.is_equal_ (a2)
