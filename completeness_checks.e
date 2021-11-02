@@ -1,6 +1,23 @@
--- Here you can try your own examples. Have fun! :)
+note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
+
+    v_linked_stack_remove (ls1, ls2: V_LINKED_STACK [G])
+        require
+            ls1.is_equal_ (ls2)
+            modify (ls1, ls2)
+            ls1.observers.is_empty
+            ls2.observers.is_empty
+            not ls1.is_empty
+            not ls2.is_empty
+            ls1 /= ls2
+        do
+            ls1.remove
+            ls2.remove
+        ensure
+            ls1.is_equal_ (ls2)
+        end
+
     v_linked_stack_extend (ls1, ls2: V_LINKED_STACK [G]; v: G)
         require
             ls1.is_equal_ (ls2)
