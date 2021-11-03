@@ -274,7 +274,7 @@ feature
     	    a1.flat_index (i, j) = a2.flat_index (i, j)
         end
 
-    v_array2_column_count (a1, a2: V_ARRAY2 [G])
+    v_array2_count (a1, a2: V_ARRAY2 [G])
     	require
 	    a1.is_equal_ (a2)
 	do
