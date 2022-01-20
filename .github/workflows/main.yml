@@ -39,3 +39,11 @@ jobs:
         run: |
           ls -la
       
+      - name: Print WD
+        run: |
+          pwd
+          
+      - name: Print home directory
+        run: |
+          echo $HOME
+      
