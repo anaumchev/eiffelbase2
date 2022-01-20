@@ -56,3 +56,7 @@ jobs:
           export ISE_EIFFEL=$PWD/Eiffel_21.11
           export ISE_PLATFORM=linux-x86-64
           export PATH=$PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin
+          
+      - name: Run AutoProof
+        run: |
+          ec_ap
