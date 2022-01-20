@@ -50,19 +50,7 @@ jobs:
       - name: Print platform
         run: |
           uname -p          
-          
-      - name: Set environment
+
+      - name: Run AutoProof
         run: |
-          export ISE_EIFFEL=$PWD/Eiffel_21.11
-          export ISE_PLATFORM=linux-x86-64
-          export PATH=$PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin
-          
-      
-      - name: Print env
-        run: |
-          echo $ISE_EIFFEL
-          echo $ISE_PLATFORM
-          echo $PATH
-      #- name: Run AutoProof
-      #  run: |
-      #    ec_ap
+          ./Eiffel_21.11/studio/spec/linux-x86-64/bin/ec_ap
