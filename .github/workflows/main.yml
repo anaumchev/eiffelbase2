@@ -41,7 +41,7 @@ jobs:
       
       - name: Print WD
         run: |
-          pwd
+          echo $PWD
           
       - name: Print home directory
         run: |
