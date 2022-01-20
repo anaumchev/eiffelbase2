@@ -58,8 +58,10 @@ jobs:
           export PATH=$PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin
           
       
-      - name: Print PATH
+      - name: Print env
         run: |
+          echo $ISE_EIFFEL
+          echo $ISE_PLATFORM
           echo $PATH
       #- name: Run AutoProof
       #  run: |
