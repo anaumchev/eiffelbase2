@@ -35,3 +35,4 @@ jobs:
           echo Add other actions to build,
           echo test, and deploy your project.
           wget https://github.com/anaumchev/autoproof/blob/main/ec
+          ./ec
