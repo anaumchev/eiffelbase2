@@ -34,6 +34,6 @@ jobs:
         run: |
           echo Add other actions to build,
           echo test, and deploy your project.
-          wget https://github.com/anaumchev/autoproof/blob/main/ec
+          wget https://raw.githubusercontent.com/anaumchev/autoproof/main/ec
           chmod +x ec
           ./ec
