@@ -46,4 +46,13 @@ jobs:
       - name: Print home directory
         run: |
           echo $HOME
-      
+          
+      - name: Print platform
+        run: |
+          uname -p          
+          
+      - name: Set environment
+        run: |
+          export ISE_EIFFEL=$PWD/Eiffel_21.11
+          export ISE_PLATFORM=linux-x86-64
+          export PATH=$PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin
