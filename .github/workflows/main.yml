@@ -57,6 +57,10 @@ jobs:
           export ISE_PLATFORM=linux-x86-64
           export PATH=$PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin
           
-      - name: Run AutoProof
+      
+      - name: Print PATH
         run: |
-          ec_ap
+          echo $PATH
+      #- name: Run AutoProof
+      #  run: |
+      #    ec_ap
