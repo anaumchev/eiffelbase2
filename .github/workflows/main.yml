@@ -28,12 +28,12 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Download AutoProof distribution
         run: |
-          wget https://raw.githubusercontent.com/anaumchev/autoproof/main/ec
-          chmod +x ec
+          wget https://media.githubusercontent.com/media/anaumchev/autoproof/main/autoproof.tar.gz
+          tar xvf autoproof.tar.gz
 
-      - name: Run AutoProof
-        run: |
-          ./ec
+      #- name: Run AutoProof
+      #  run: |
+      #    ./ec
           
       - name: List contents
         run: |
