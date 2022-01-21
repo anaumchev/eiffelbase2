@@ -28,7 +28,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Download AutoProof distribution
         run: |
-          wget https://media.githubusercontent.com/media/anaumchev/autoproof/main/autoproof.tar.gz
+          wget https://www.dropbox.com/s/1kibfwteo0fb96q/autoproof.tar.gz
           tar xvf autoproof.tar.gz
 
       #- name: Run AutoProof
