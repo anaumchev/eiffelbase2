@@ -4,6 +4,7 @@ note
 		(using linear congruential pseudorandom number generator).
 	]"
 	author: "Nadia Polikarpova."
+	revised_by: "Alexander Kogtenkov"
 	model: box
 
 class
@@ -57,7 +58,7 @@ feature -- Access
 			if min = {INTEGER}.min_value and max = {INTEGER}.max_value then
 				Result := item
 			else
-				n := item.to_natural_32 \\ (max.to_integer_64 - min.to_integer_64 + 1).to_natural_32
+				n := item.to_natural_32 \\ (max.to_integer_64 - min.to_integer_64 + {INTEGER_64} 1).to_natural_32
 				Result := (min + n.to_integer_64).to_integer_32
 			end
 		ensure
@@ -171,4 +172,14 @@ feature {NONE} -- Implementation
 invariant
 	box_implementation: box = create {like box}.singleton (random_bits (value, 32))
 
+note
+	copyright: "Copyright (c) 1984-2018, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 end

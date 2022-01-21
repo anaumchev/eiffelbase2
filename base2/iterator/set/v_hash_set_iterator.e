@@ -1,6 +1,7 @@
-note
+﻿note
 	description: "Iterators over hash sets."
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: target, sequence, index_
 	manual_inv: true
 	false_guards: true
@@ -29,8 +30,6 @@ feature {NONE} -- Initialization
 			t_wrapped: t.is_wrapped
 			no_observers: observers.is_empty
 			not_observing_t: not t.observers [Current]
-			modify_field (["observers", "closed"], t)
-			modify (Current)
 		do
 			target := t
 			t.unwrap
@@ -41,7 +40,7 @@ feature {NONE} -- Initialization
 
 			iterator.lemma_sequence_no_duplicates
 			iterator.sequence.lemma_no_duplicates
-			check across t.bag.domain as x all t.bag [x.item] = iterator.sequence.to_bag [x.item] end end
+			check ∀ x: t.bag.domain ¦ t.bag [x] = iterator.sequence.to_bag [x] end
 
 			wrap
 		ensure
@@ -51,6 +50,8 @@ feature {NONE} -- Initialization
 			index_effect: index_ = 1
 			t_observers_effect: t.observers = old t.observers & Current
 			iterator.is_fresh
+			modify_field (["observers", "closed"], t)
+			modify (Current)
 		end
 
 feature -- Initialization
@@ -63,8 +64,6 @@ feature -- Initialization
 			target_wrapped: target.is_wrapped
 			other_target_wrapped: other.target.is_wrapped
 			target /= other.target implies not other.target.observers [Current]
-			modify (Current)
-			modify_model ("observers", [target, other.target])
 		do
 			if Current /= other then
 				if target /= other.target then
@@ -79,11 +78,7 @@ feature -- Initialization
 				iterator.go_to_other (other.iterator)
 				check iterator.inv_only ("index_constraint", "target_domain_constraint", "value_sequence_definition") end
 				wrap
-    			else
-                    		unwrap
-                		index_ := 0
-                		wrap
-    			end
+			end
 		ensure
 			target_effect: target = old other.target
 			index_effect: index_ = old other.index_
@@ -92,6 +87,8 @@ feature -- Initialization
 			old_target_observers_effect: other.target /= old target implies (old target).observers = old target.observers / Current
 			other_target_observers_effect: other.target /= old target implies other.target.observers = old other.target.observers & Current
 			target_observers_preserved: other.target = old target implies other.target.observers = old other.target.observers
+			modify (Current)
+			modify_model ("observers", [target, other.target])
 		end
 
 feature -- Access
@@ -106,7 +103,7 @@ feature -- Access
 			Result := iterator.key
 		end
 
-feature -- Measurement		
+feature -- Measurement
 
 	index: INTEGER
 			-- Current position.
@@ -236,19 +233,30 @@ feature -- Removal
 
 			check iterator.inv_only ("target_domain_constraint") end
 			iterator.sequence.to_bag.lemma_domain_count
-			check across target.bag.domain as x all target.bag [x.item] = iterator.sequence.to_bag [x.item] end end
+			check ∀ x: target.bag.domain ¦ target.bag [x] = iterator.sequence.to_bag [x] end
 		end
 
 feature {V_CONTAINER, V_ITERATOR, V_LOCK} -- Implementation
 
-	iterator: V_HASH_TABLE_ITERATOR [G, ANY]
-			-- Iterator over the storage.		
+	iterator: V_HASH_TABLE_ITERATOR [G, detachable ANY]
+			-- Iterator over the storage.
 
 invariant
 	iterator_exists: iterator /= Void
-	owns_definition: owns = [ iterator ]
+	owns_definition: owns ~ create {MML_SET [ANY]}.singleton (iterator)
 	targets_connected: target.table = iterator.target
 	same_sequence: sequence ~ iterator.sequence
 	same_index: index_ = iterator.index_
+
+note
+	copyright: "Copyright (c) 1984-2021, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 
 end

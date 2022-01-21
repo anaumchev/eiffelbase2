@@ -1,10 +1,11 @@
-note
+﻿note
 	description: "[
 			Hash sets with hash function provided by HASHABLE and object equality.
 			Implementation uses hash tables.
 			Search, extension and removal are amortized constant time.
 		]"
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: set, lock
 	manual_inv: true
 	false_guards: true
@@ -31,15 +32,18 @@ feature {NONE} -- Initialization
 			status: creator
 		require
 			l_wrapped: l.is_wrapped
-			modify (Current)
-			modify_model ("observers", l)
 		do
 			create table.make (l)
 			l.add_client (Current)
 		ensure then
 			set_empty: set.is_empty
 			lock_set: lock = l
+			lock_observers_effect: l.observers = old l.observers & table & Current
+			table.is_empty
+			is_empty
 			observers_empty: observers.is_empty
+			modify (Current)
+			modify_model ("observers", l)
 		end
 
 feature -- Initialization
@@ -52,8 +56,6 @@ feature -- Initialization
 			lock_wrapped: lock.is_wrapped
 			same_lock: lock = other.lock
 			no_iterators: observers.is_empty
-			modify_model ("set", Current)
-			modify_model ("observers", [Current, other])
 		do
 			if other /= Current then
 				unwrap
@@ -66,6 +68,8 @@ feature -- Initialization
 			set_effect: set ~ old other.set
 			observers_restored: observers ~ old observers
 			other_observers_restored: other.observers ~ old other.observers
+			modify_model ("set", Current)
+			modify_model ("observers", [Current, other])
 		end
 
 feature -- Measurement
@@ -151,7 +155,7 @@ feature -- Removal
 
 feature -- Implementation
 
-	table: V_HASH_TABLE [G, ANY]
+	table: V_HASH_TABLE [G, detachable ANY]
 			-- Hash table that stores set elements as keys.
 
 feature -- Specification
@@ -161,6 +165,7 @@ feature -- Specification
 		note
 			status: ghost
 		attribute
+			check is_executable: False then end
 		end
 
 	forget_iterator (it: V_ITERATOR [G])
@@ -182,11 +187,22 @@ feature -- Specification
 
 invariant
 	table_exists: table /= Void
-	owns_definition: owns = [table]
+	owns_definition: owns ~ create {MML_SET [ANY]}.singleton (table)
 	set_implementation: set = table.map.domain
-	table_values_definition: across set as x all table.map [x.item] = Void end
+	table_values_definition: ∀ x: set ¦ table.map [x] = Void
 	same_lock: lock = table.lock
-	observers_type: across observers as o all attached {V_HASH_SET_ITERATOR [G]} o.item end
+	observers_type: ∀ o: observers ¦ attached {V_HASH_SET_ITERATOR [G]} o
 	observers_correspond: table.observers.count <= observers.count
+
+note
+	copyright: "Copyright (c) 1984-2021, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 
 end

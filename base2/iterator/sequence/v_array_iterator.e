@@ -1,6 +1,7 @@
 note
 	description: "Iterators over mutable sequences that allow only traversal, search and replacement."
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: target, index_
 	manual_inv: true
 	false_guards: true
@@ -35,9 +36,6 @@ feature {NONE} -- Initialization
 			-- Create an iterator at position `i' in `t'.
 		note
 			status: creator
-		require
-			modify (Current)
-			modify_field (["observers", "closed"], t)
 		do
 			target := t
 			target.add_iterator (Current)
@@ -55,6 +53,8 @@ feature {NONE} -- Initialization
 			index_effect_before: i < 1 implies index_ = 0
 			index_effect_after: i > t.sequence.count implies index_ = t.sequence.count + 1
 			t_observers_effect: t.observers = old t.observers & Current
+			modify (Current)
+			modify_field (["observers", "closed"], t)
 		end
 
 feature -- Initialization
@@ -66,8 +66,6 @@ feature -- Initialization
 		require
 			target_wrapped: target.is_wrapped
 			other_target_wrapped: other.target.is_wrapped
-			modify (Current)
-			modify_model ("observers", [target, other.target])
 		do
 			check other.inv_only ("index_constraint", "sequence_definition", "default_owns", "index_definition") end
 			check inv_only ("no_observers", "subjects_definition", "A2", "default_owns") end
@@ -78,10 +76,6 @@ feature -- Initialization
 				index := other.index
 				check target.inv end
 				wrap
-			else
-                		unwrap
-                		index := 0
-                		wrap
 			end
 		ensure then
 			target_effect: target = other.target
@@ -91,6 +85,8 @@ feature -- Initialization
 			old_target_observers_effect: other.target /= old target implies (old target).observers = old target.observers / Current
 			other_target_observers_effect: other.target /= old target implies other.target.observers = old other.target.observers & Current
 			target_observers_preserved: other.target = old target implies other.target.observers = old other.target.observers
+			modify (Current)
+			modify_model ("observers", [target, other.target])
 		end
 
 feature -- Access
@@ -115,6 +111,7 @@ feature -- Specification
 		note
 			status: ghost
 		attribute
+			check is_executable: False then end
 		end
 
 	index_: INTEGER
@@ -124,4 +121,14 @@ feature -- Specification
 		attribute
 		end
 
+note
+	copyright: "Copyright (c) 1984-2018, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 end

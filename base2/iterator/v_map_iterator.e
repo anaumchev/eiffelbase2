@@ -1,12 +1,13 @@
 note
 	description: "Iterators to read from maps in linear order."
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: target, sequence, index_
 	manual_inv: true
 	false_guards: true
 
 deferred class
-	V_MAP_ITERATOR [K, V]
+	V_MAP_ITERATOR [K -> ANY, V]
 
 inherit
 	V_ITERATOR [V]
@@ -43,11 +44,11 @@ feature -- Cursor movement
 			target_closed: target.closed
 			lock_wrapped: target.lock.is_wrapped
 			k_locked: target.lock.locked [k]
-			modify_model ("index_", Current)
 		deferred
 		ensure
 			index_effect_found: target.domain_has (k) implies sequence [index_] = target.domain_item (k)
 			index_effect_not_found: not target.domain_has (k) implies index_ = sequence.count + 1
+			modify_model ("index_", Current)
 		end
 
 feature -- Specification
@@ -104,4 +105,14 @@ invariant
 	target_domain_constraint: target.map.domain ~ sequence.range
 	value_sequence_definition: value_sequence ~ value_sequence_from (sequence, target.map)
 
+note
+	copyright: "Copyright (c) 1984-2018, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 end

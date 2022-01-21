@@ -1,6 +1,7 @@
-note
+﻿note
 	description: "Iterators over doubly-linked lists."
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: target, index_
 	manual_inv: true
 	false_guards: true
@@ -26,9 +27,6 @@ feature {V_CONTAINER, V_ITERATOR} -- Initialization
 			-- Create iterator over `list'.
 		note
 			status: creator
-		require
-			modify (Current)
-			modify_field (["observers", "closed"], list)
 		do
 			target := list
 			target.add_iterator (Current)
@@ -40,6 +38,8 @@ feature {V_CONTAINER, V_ITERATOR} -- Initialization
 			target_effect: target = list
 			index_effect: index_ = 0
 			list_observers_effect: list.observers = old list.observers & Current
+			modify (Current)
+			modify_field (["observers", "closed"], list)
 		end
 
 feature -- Initialization
@@ -51,8 +51,6 @@ feature -- Initialization
 		require
 			target_wrapped: target.is_wrapped
 			other_target_wrapped: other.target.is_wrapped
-			modify (Current)
-			modify_model ("observers", [target, other.target])
 		do
 			if Current /= other then
 				check other.inv_only ("index_constraint", "after_definition", "sequence_definition", "cell_off", "cell_not_off", "default_owns") end
@@ -67,13 +65,7 @@ feature -- Initialization
 				check target.inv_only ("cells_domain", "bag_definition") end
 				target.lemma_cells_distinct
 				wrap
-        		else
-                		unwrap
-                		index_ := 0
-                		after_ := False
-                		active := Void
-                		wrap
-    			end
+			end
 		ensure
 			target_effect: target = other.target
 			index_effect: index_ = other.index_
@@ -82,6 +74,8 @@ feature -- Initialization
 			old_target_observers_effect: other.target /= old target implies (old target).observers = old target.observers / Current
 			other_target_observers_effect: other.target /= old target implies other.target.observers = old other.target.observers & Current
 			target_observers_preserved: other.target = old target implies other.target.observers = old other.target.observers
+			modify (Current)
+			modify_model ("observers", [target, other.target])
 		end
 
 feature -- Access
@@ -94,7 +88,11 @@ feature -- Access
 		do
 			check inv end
 			check target.inv end
-			Result := active.item
+			if attached active as a then
+				Result := a.item
+			else
+				check from_precondition: False then end
+			end
 		end
 
 feature -- Measurement
@@ -152,7 +150,7 @@ feature -- Status report
 feature -- Comparison
 
 	is_equal_ (other: like Current): BOOLEAN
-			-- Is iterator traversing the same container and is at the same position at `other'?		
+			-- Is iterator traversing the same container and is at the same position at `other'?
 		do
 			check inv; other.inv end
 			Result := target = other.target and active = other.active and after_ = other.after_
@@ -182,7 +180,11 @@ feature -- Cursor movement
 			-- Move one position forward.
 		do
 			check target.inv end
-			active := active.right
+			if attached active as a then
+				active := a.right
+			else
+				check from_precondition: False then end
+			end
 			index_ := index_ + 1
 			after_ := active = Void
 		end
@@ -191,7 +193,11 @@ feature -- Cursor movement
 			-- Go one position backwards.
 		do
 			check target.inv end
-			active := active.left
+			if attached active as a then
+				active := a.left
+			else
+				check from_precondition: False then end
+			end
 			index_ := index_ - 1
 			check index_ >= 1 implies target.cells [index_].inv end
 		end
@@ -218,8 +224,6 @@ feature -- Cursor movement
 			-- Go to position `i'.
 		note
 			explicit: wrapping
-		local
-			j: INTEGER
 		do
 			check inv end
 			if i = 0 then
@@ -241,7 +245,11 @@ feature -- Replacement
 	put (v: G)
 			-- Replace item at current position with `v'.
 		do
-			target.put_cell (v, active, index_)
+			if attached active as a then
+				target.put_cell (v, a, index_)
+			else
+				check from_precondition: False then end
+			end
 			check target.inv_only ("bag_definition") end
 		end
 
@@ -273,7 +281,11 @@ feature -- Extension
 	extend_right (v: G)
 			-- Insert `v' to the right of current position. Do not move cursor.
 		do
-			target.extend_after (create {V_DOUBLY_LINKABLE [G]}.put (v), active, index_)
+			if attached active as a then
+				target.extend_after (create {V_DOUBLY_LINKABLE [G]}.put (v), a, index_)
+			else
+				check from_precondition: False then end
+			end
 			check target.inv_only ("bag_definition") end
 		ensure then
 			cell_sequence_front_preserved: target.cells.old_.front (index_) ~ target.cells.front (index_)
@@ -313,6 +325,7 @@ feature -- Extension
 			from
 				check inv_only ("subjects_definition", "no_observers", "A2") end
 				check other.inv_only ("target_exists", "subjects_definition", "index_constraint") end
+				create s
 			invariant
 				1 <= index_.old_ and index_.old_ <= index_ and index_ <= sequence.count
 				1 <= other.index_.old_ and other.index_.old_ <= other.index_ and other.index_ <= other.sequence.count + 1
@@ -321,10 +334,10 @@ feature -- Extension
 				other.is_wrapped
 				target.is_wrapped
 				target /= Current
-				across target.observers as o all o.item /= Current implies o.item.is_open end
+				∀ o: target.observers ¦ o /= Current implies o.is_open
 				s = other.sequence.old_.interval (other.index_.old_, other.index_ - 1)
 				target.sequence ~ (target.sequence.front (index_.old_).old_ +
-					s + target.sequence.tail (index_.old_ + 1).old_)
+							s + target.sequence.tail (index_.old_ + 1).old_)
 				target.observers ~ target.observers.old_
 				other.sequence ~ other.sequence.old_
 			until
@@ -350,10 +363,8 @@ feature -- Extension
 			other_wrapped: other.is_wrapped
 			other_not_target: other /= target
 			not_after: index_ <= sequence.count
-			observers_open: across target.observers as o all o.item /= Current implies o.item.is_open end
-			other_observers_open: across other.observers as o all o.item.is_open end
-			modify_model ("sequence", Current)
-			modify_model ("sequence", [target, other])
+			observers_open: ∀ o: target.observers ¦ o /= Current implies o.is_open
+			other_observers_open: ∀ o: other.observers ¦ o.is_open
 		do
 			target.merge_after (other, active, index_)
 			check target.inv_only ("cells_domain", "bag_definition") end
@@ -361,6 +372,8 @@ feature -- Extension
 		ensure
 			sequence_effect: sequence ~ old (sequence.front (index_) + other.sequence + sequence.tail (index_ + 1))
 			other_sequence_effect: other.sequence.is_empty
+			modify_model ("sequence", Current)
+			modify_model ("sequence", [target, other])
 		end
 
 feature -- Removal
@@ -400,17 +413,21 @@ feature -- Removal
 	remove_right
 			-- Remove element to the right of current position. Do not move cursor.
 		do
-			target.remove_after (active, index_)
+			if attached active as a then
+				target.remove_after (a, index_)
+			else
+				check from_precondition: False then end
+			end
 			check target.inv_only ("bag_definition") end
 		end
 
 feature {V_DOUBLY_LINKED_LIST_ITERATOR} -- Implementation
 
-	active: V_DOUBLY_LINKABLE [G]
+	active: detachable V_DOUBLY_LINKABLE [G]
 			-- Cell at current position.
 
 	after_: BOOLEAN
-			-- Is current position after the last container position?			
+			-- Is current position after the last container position?
 
 	active_index: INTEGER
 			-- Distance from `target.first_cell' to `active'.
@@ -438,10 +455,18 @@ feature {V_DOUBLY_LINKED_LIST_ITERATOR} -- Implementation
 				active = cf or active = cb
 			loop
 				i := i + 1
-				cf := cf.right
+				if attached cf then
+					cf := cf.right
+				else
+					check from_loop_invariant: False then end
+				end
 				check target.cells [j - 1].inv end
 				j := j - 1
-				cb := cb.left
+				if attached cb then
+					cb := cb.left
+				else
+					check from_loop_invariant: False then end
+				end
 			variant
 				target.count_ - i
 			end
@@ -461,5 +486,16 @@ invariant
 	target_cells_domain: target.cells.count = sequence.count
 	cell_not_off: 1 <= index_ and index_ <= sequence.count implies active = target.cells [index_]
 	target_cells_distinct: target.cells.no_duplicates
+
+note
+	copyright: "Copyright (c) 1984-2021, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 
 end

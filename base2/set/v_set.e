@@ -1,15 +1,16 @@
-note
+﻿note
 	description: "[
-		Container where all elements are unique with respect to object equality. 
-		Elements can be added and removed.
+			Container where all elements are unique with respect to object equality. 
+			Elements can be added and removed.
 		]"
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: set, lock
 	manual_inv: true
 	false_guards: true
 
 deferred class
-	V_SET [G]
+	V_SET [G -> ANY]
 
 inherit
 	V_CONTAINER [G]
@@ -104,7 +105,6 @@ feature -- Iteration
 		require
 			lock_wrapped: lock.is_wrapped
 			v_locked: lock.locked [v]
-			modify_field (["observers", "closed"], Current)
 		deferred
 		ensure
 			result_fresh: Result.is_fresh
@@ -113,6 +113,7 @@ feature -- Iteration
 			target_definition: Result.target = Current
 			index_definition_found: set_has (v) implies Result.sequence [Result.index_] = set_item (v)
 			index_definition_not_found: not set_has (v) implies Result.index_ = Result.sequence.count + 1
+			modify_field (["observers", "closed"], Current)
 		end
 
 feature -- Comparison
@@ -125,9 +126,8 @@ feature -- Comparison
 		require
 			lock_wrapped: lock.is_wrapped
 			same_lock: other.lock = lock
-			modify_model ("observers", [Current, other])
 		local
-			it: V_SET_ITERATOR [G]
+			it: like new_cursor
 		do
 			Result := True
 			if other /= Current then
@@ -141,13 +141,17 @@ feature -- Comparison
 					other.inv_only ("items_locked")
 					lock.inv_only ("owns_definition")
 					1 <= it.index_ and it.index_ <= it.sequence.count + 1
-					Result implies across 1 |..| (it.index_ - 1) as i all other.set_has (it.sequence [i.item]) end
+					Result implies ∀ i: 1 |..| (it.index_ - 1) ¦ other.set_has (it.sequence [i])
 					not Result implies not other.set_has (it.sequence [it.index_ - 1])
 					modify_model ("index_", it)
 				until
 					it.after or not Result
 				loop
-					Result := other.has (it.item)
+					if attached it.item as v then
+						Result := other.has (v)
+					else
+						check from_loop_exit_condition: False then end
+					end
 					it.forth
 				variant
 					it.sequence.count - it.index_
@@ -156,9 +160,10 @@ feature -- Comparison
 			end
 			check inv_only ("locked_non_void") end
 		ensure
-			definition: Result = across set as x all other.set_has (x.item) end
+			definition: Result = ∀ x: set ¦ other.set_has (x)
 			observers_restored: observers ~ old observers
 			other_observers_restored: other.observers ~ old other.observers
+			modify_model ("observers", [Current, other])
 		end
 
 	is_superset_of (other: V_SET [G]): BOOLEAN
@@ -169,13 +174,13 @@ feature -- Comparison
 		require
 			lock_wrapped: lock.is_wrapped
 			same_lock: other.lock = lock
-			modify_model ("observers", [Current, other])
 		do
 			Result := other.is_subset_of (Current)
 		ensure
-			definition: Result = across other.set as x all set_has (x.item) end
+			definition: Result = ∀ x: other.set ¦ set_has (x)
 			observers_restored: observers ~ old observers
 			other_observers_restored: other.observers ~ old other.observers
+			modify_model ("observers", [Current, other])
 		end
 
 	disjoint (other: V_SET [G]): BOOLEAN
@@ -186,9 +191,8 @@ feature -- Comparison
 		require
 			lock_wrapped: lock.is_wrapped
 			same_lock: other.lock = lock
-			modify_model ("observers", [Current, other])
 		local
-			it: V_SET_ITERATOR [G]
+			it: like new_cursor
 		do
 			if other.is_empty then
 				Result := True
@@ -204,13 +208,17 @@ feature -- Comparison
 					other.inv_only ("items_locked")
 					lock.inv_only ("owns_definition")
 					1 <= it.index_ and it.index_ <= it.sequence.count + 1
-					Result implies across 1 |..| (it.index_ - 1) as i all not other.set_has (it.sequence [i.item]) end
+					Result implies ∀ i: 1 |..| (it.index_ - 1) ¦ not other.set_has (it.sequence [i])
 					not Result implies other.set_has (it.sequence [it.index_ - 1])
 					modify_model ("index_", it)
 				until
 					it.after or not Result
 				loop
-					Result := not other.has (it.item)
+					if attached it.item as v then
+						Result := not other.has (v)
+					else
+						check from_loop_exit_condition: False then end
+					end
 					it.forth
 				variant
 					it.sequence.count - it.index_
@@ -219,9 +227,10 @@ feature -- Comparison
 			end
 			check inv_only ("locked_non_void") end
 		ensure
-			definition: Result = across set as x all not other.set_has (x.item) end
+			definition: Result = ∀ x: set ¦ not other.set_has (x)
 			observers_restored: observers ~ old observers
 			other_observers_restored: other.observers ~ old other.observers
+			modify_model ("observers", [Current, other])
 		end
 
 feature -- Extension
@@ -232,12 +241,12 @@ feature -- Extension
 			v_locked: lock.locked [v]
 			lock_wrapped: lock.is_wrapped
 			no_iterators: observers.is_empty
-			modify_model ("set", Current)
 		deferred
 		ensure
 			abstract_effect: set_has (v)
 			precise_effect_has: old set_has (v) implies set = old set
 			precise_effect_new: not old set_has (v) implies set = old set & v
+			modify_model ("set", Current)
 		end
 
 	join (other: V_SET [G])
@@ -248,8 +257,6 @@ feature -- Extension
 			lock_wrapped: lock.is_wrapped
 			same_lock: other.lock = lock
 			no_iterators: observers.is_empty
-			modify_model ("set", Current)
-			modify_model ("observers", [Current, other])
 		local
 			it: V_SET_ITERATOR [G]
 		do
@@ -266,8 +273,8 @@ feature -- Extension
 					lock.inv_only ("owns_definition")
 					1 <= it.index_ and it.index_ <= it.sequence.count + 1
 					set.old_ <= set
-					across 1 |..| (it.index_ - 1) as i all set_has (it.sequence [i.item]) end
-					across set as x all set.old_ [x.item] or other.set.old_ [x.item] end
+					∀ i: 1 |..| (it.index_ - 1) ¦ set_has (it.sequence [i])
+					∀ x: set ¦ set.old_ [x] or other.set.old_ [x]
 					modify_model ("set", Current)
 					modify_model ("index_", it)
 				until
@@ -282,26 +289,27 @@ feature -- Extension
 			end
 		ensure
 			has_old: old set <= set
-			has_other: across old other.set as y all set_has (y.item) end
-			no_extra: across set as x all set.old_ [x.item] or other.set.old_ [x.item] end
+			has_other: ∀ y: old other.set ¦ set_has (y)
+			no_extra: ∀ x: set ¦ set.old_ [x] or other.set.old_ [x]
 			observers_restored: observers ~ old observers
 			other_observers_restored: other.observers ~ old other.observers
+			modify_model ("set", Current)
+			modify_model ("observers", [Current, other])
 		end
 
 feature -- Removal
 
 	remove (v: G)
 			-- Remove `v' from the set, if contained.
-			-- Otherwise do nothing.		
+			-- Otherwise do nothing.
 		note
 			status: nonvariant
 		require
 			v_locked: lock.locked [v]
 			lock_wrapped: lock.is_wrapped
 			no_iterators: observers.is_empty
-			modify_model (["set", "observers"], Current)
 		local
-			it: V_SET_ITERATOR [G]
+			it: like new_cursor
 		do
 			check inv_only ("lock_non_current", "items_locked", "no_duplicates") end
 			check lock.inv_only ("owns_definition", "equivalence_definition") end
@@ -317,6 +325,7 @@ feature -- Removal
 			precise_effect_not_found: not old set_has (v) implies set = old set
 			precise_effect_found: old set_has (v) implies set = old (set / set_item (v))
 			observers_restored: observers ~ old observers
+			modify_model (["set", "observers"], Current)
 		end
 
 	meet (other: V_SET [G])
@@ -327,10 +336,8 @@ feature -- Removal
 			lock_wrapped: lock.is_wrapped
 			same_lock: lock = other.lock
 			no_iterators: observers.is_empty
-			modify_model ("set", Current)
-			modify_model ("observers", [Current, other])
 		local
-			it: V_SET_ITERATOR [G]
+			it: like new_cursor
 		do
 			check inv_only ("locked_non_void") end
 			if other /= Current then
@@ -346,8 +353,8 @@ feature -- Removal
 					lock.inv_only ("owns_definition", "equivalence_definition")
 					1 <= it.index_ and it.index_ <= it.sequence.count + 1
 					set <= set.old_
-					across 1 |..| (it.index_ - 1) as i all other.set_has (it.sequence [i.item]) end
-					across set.old_ as y all other.set_has (y.item) implies set [y.item] end
+					∀ i: 1 |..| (it.index_ - 1) ¦ attached it.sequence [i] as x and then other.set_has (x)
+					∀ y: set.old_ ¦ other.set_has (y) implies set [y]
 					modify_model ("set", Current)
 					modify_model (["sequence", "index_"], it)
 				until
@@ -365,9 +372,11 @@ feature -- Removal
 			end
 		ensure
 			only_old: set <= old set
-			not_too_few: across old set as y all other.set_has (y.item).old_ = set_has (y.item) end
+			not_too_few: ∀ y: old set ¦ other.set_has (y).old_ = set_has (y)
 			observers_restored: observers ~ old observers
 			other_observers_restored: other.observers ~ old other.observers
+			modify_model ("set", Current)
+			modify_model ("observers", [Current, other])
 		end
 
 	subtract (other: V_SET [G])
@@ -378,8 +387,6 @@ feature -- Removal
 			lock_wrapped: lock.is_wrapped
 			same_lock: lock = other.lock
 			no_iterators: observers.is_empty
-			modify_model ("set", Current)
-			modify_model ("observers", [Current, other])
 		local
 			it: V_SET_ITERATOR [G]
 		do
@@ -396,8 +403,8 @@ feature -- Removal
 					lock.inv_only ("owns_definition", "equivalence_definition")
 					1 <= it.index_ and it.index_ <= it.sequence.count + 1
 					set <= set.old_
-					across 1 |..| (it.index_ - 1) as i all not set_has (it.sequence [i.item]) end
-					across set.old_ as y all not other.set_has (y.item) implies set [y.item] end
+					∀ i: 1 |..| (it.index_ - 1) ¦ attached it.sequence [i] as x implies not set_has (x)
+					∀ y: set.old_ ¦ not other.set_has (y) implies set [y]
 					observers ~ observers.old_
 					modify_model (["set", "observers"], Current)
 					modify_model ("index_", it)
@@ -415,9 +422,11 @@ feature -- Removal
 			end
 		ensure
 			only_old: set <= old set
-			not_too_few: across old set as y all other.set_has (y.item).old_ /= set_has (y.item) end
+			not_too_few: ∀ y: old set ¦ other.set_has (y).old_ /= set_has (y)
 			observers_restored: observers ~ old observers
 			other_observers_restored: other.observers ~ old other.observers
+			modify_model ("set", Current)
+			modify_model ("observers", [Current, other])
 		end
 
 	symmetric_subtract (other: V_SET [G])
@@ -428,8 +437,6 @@ feature -- Removal
 			lock_wrapped: lock.is_wrapped
 			same_lock: lock = other.lock
 			no_iterators: observers.is_empty
-			modify_model ("set", Current)
-			modify_model ("observers", [Current, other])
 		local
 			it: V_SET_ITERATOR [G]
 			seq: MML_SEQUENCE [G]
@@ -447,24 +454,28 @@ feature -- Removal
 					other.inv_only ("items_locked")
 					lock.inv_only ("owns_definition")
 					1 <= it.index_ and it.index_ <= seq.count + 1
-					across set.old_ as x all other.set_has (x.item).old_ or set [x.item]  end
-					across 1 |..| (it.index_ - 1) as j all lock.set_has (set.old_, seq [j.item]) or set [seq [j.item]] end
-					across set as x all set.old_ [x.item] or across 1 |..| (it.index_ - 1) as j some x.item = seq [j.item] end end
+					∀ x: set.old_ ¦ other.set_has (x).old_ or set [x]
+					∀ j: 1 |..| (it.index_ - 1) ¦ lock.set_has (set.old_, seq [j]) or set [seq [j]]
+					∀ x: set ¦ set.old_ [x] or ∃ j: 1 |..| (it.index_ - 1) ¦ x = seq [j]
 					observers ~ observers.old_
 					modify_model (["set", "observers"], Current)
 					modify_model ("index_", it)
 				until
 					it.after
 				loop
-					if has (it.item) then
-						check it.inv_only ("target_bag_constraint") end
-						seq.lemma_no_duplicates
-						check other.inv_only ("items_locked", "no_duplicates") end
-						check inv_only ("items_locked", "no_duplicates") end
-						check lock.inv_only ("equivalence_definition") end
-						remove (it.item)
+					if attached it.item as v then
+						if has (v) then
+							check it.inv_only ("target_bag_constraint") end
+							seq.lemma_no_duplicates
+							check other.inv_only ("items_locked", "no_duplicates") end
+							check inv_only ("items_locked", "no_duplicates") end
+							check lock.inv_only ("equivalence_definition") end
+							remove (v)
+						else
+							extend (v)
+						end
 					else
-						extend (it.item)
+						check from_loop_exit_condition: False then end
 					end
 					it.forth
 				variant
@@ -475,21 +486,23 @@ feature -- Removal
 				wipe_out
 			end
 		ensure
-			set_effect_old: across old set as x all other.set_has (x.item).old_ or set [x.item]  end
-			set_effect_other: across other.set.old_ as x all set_has (x.item).old_ or set [x.item] end
-			set_effect_new: across set as x all set.old_ [x.item] or other.set.old_ [x.item] end
+			set_effect_old: ∀ x: old set ¦ other.set_has (x).old_ or set [x]
+			set_effect_other: ∀ x: other.set.old_ ¦ set_has (x).old_ or set [x]
+			set_effect_new: ∀ x: set ¦ set.old_ [x] or other.set.old_ [x]
 			observers_restored: observers ~ old observers
 			other_observers_restored: other.observers ~ old other.observers
+			modify_model ("set", Current)
+			modify_model ("observers", [Current, other])
 		end
 
 	wipe_out
 			-- Remove all elements.
 		require
 			no_iterators: observers.is_empty
-			modify_model ("set", Current)
 		deferred
 		ensure
 			set_effect: set.is_empty
+			modify_model ("set", Current)
 		end
 
 feature -- Specification
@@ -500,6 +513,7 @@ feature -- Specification
 			status: ghost
 			replaces: bag
 		attribute
+			check is_executable: False then end
 		end
 
 	set_has (v: G): BOOLEAN
@@ -544,6 +558,7 @@ feature -- Specification
 		do
 			from
 				s1 := s
+				create Result
 			invariant
 				s = s1 + Result.domain
 				s1.is_disjoint (Result.domain)
@@ -573,5 +588,16 @@ feature -- Specification
 
 invariant
 	bag_definition: bag = bag_from (set)
+
+note
+	copyright: "Copyright (c) 1984-2021, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 
 end

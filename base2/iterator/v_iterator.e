@@ -1,9 +1,10 @@
-note
+﻿note
 	description: "[
-		Iterators to read from a container in linear order.
-		Indexing starts from 1.
-	]"
+			Iterators to read from a container in linear order.
+			Indexing starts from 1.
+		]"
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: target, sequence, index_
 	manual_inv: true
 	false_guards: true
@@ -114,22 +115,22 @@ feature -- Cursor movement
 			-- Go to the first position.
 		require
 			target_closed: target.closed
-			modify_model ("index_", Current)
 		deferred
 		ensure
 			index_effect: index_ = 1
 			target_closed: target.closed
+			modify_model ("index_", Current)
 		end
 
 	finish
 			-- Go to the last position.
 		require
 			target_closed: target.closed
-			modify_model ("index_", Current)
 		deferred
 		ensure
 			index_effect: index_ = sequence.count
 			target_closed: target.closed
+			modify_model ("index_", Current)
 		end
 
 	forth
@@ -144,11 +145,11 @@ feature -- Cursor movement
 		require
 			not_off: not off
 			target_closed: target.closed
-			modify_model ("index_", Current)
 		deferred
 		ensure
 			index_effect: index_ = old index_ - 1
 			target_closed: target.closed
+			modify_model ("index_", Current)
 		end
 
 	go_to (i: INTEGER)
@@ -158,7 +159,6 @@ feature -- Cursor movement
 		require
 			has_index: valid_index (i)
 			target_wrapped: target.is_wrapped
-			modify_model ("index_", Current)
 		local
 			j: INTEGER
 		do
@@ -188,26 +188,26 @@ feature -- Cursor movement
 			end
 		ensure
 			index_effect: index_ = i
+			modify_model ("index_", Current)
 		end
 
 	go_before
 			-- Go before any position of `target'.
-		require
-			modify_model ("index_", Current)
 		deferred
 		ensure
 			index_effect: index_ = 0
+			modify_model ("index_", Current)
 		end
 
 	go_after
 			-- Go after any position of `target'.
 		require
 			target_closed: target.closed
-			modify_model ("index_", Current)
 		deferred
 		ensure
 			index_effect: index_ = sequence.count + 1
 			target_closed: target.closed
+			modify_model ("index_", Current)
 		end
 
 	search_forth (v: G)
@@ -228,7 +228,7 @@ feature -- Cursor movement
 				target.is_wrapped
 				index_.old_ <= index_ and index_ <= sequence.count + 1
 				not before
-				across index_.old_.max (1) |..| (index_ - 1) as i all sequence [i.item] /= v end
+				∀ i: index_.old_.max (1) |..| (index_ - 1) ¦ sequence [i] /= v
 			until
 				after or else item = v
 			loop
@@ -250,7 +250,6 @@ feature -- Cursor movement
 			status: nonvariant
 		require
 			target_wrapped: target.is_wrapped
-			modify_model ("index_", Current)
 		do
 			if after then
 				finish
@@ -263,7 +262,7 @@ feature -- Cursor movement
 				0 <= index_
 				index_ <= index_.old_
 				index_ <= sequence.count
-				across (index_ + 1) |..| index_.old_.min (sequence.count) as i all sequence [i.item] /= v end
+				∀ i: (index_ + 1) |..| index_.old_.min (sequence.count) ¦ sequence [i] /= v
 			until
 				before or else item = v
 			loop
@@ -275,6 +274,7 @@ feature -- Cursor movement
 			index_effect_not_found: not sequence.front (old index_).has (v) implies index_ = 0
 			index_effect_found: sequence.front (old index_).has (v) implies
 				(sequence [index_] = v and not sequence.interval (index_ + 1, old index_).has (v))
+			modify_model ("index_", Current)
 		end
 
 feature -- Specification
@@ -284,6 +284,7 @@ feature -- Specification
 		note
 			status: ghost
 		attribute
+			check is_executable: False then end
 		end
 
 	index_: INTEGER
@@ -296,9 +297,20 @@ feature -- Specification
 
 invariant
 	target_exists: target /= Void
-	subjects_definition: subjects = [target]
+	subjects_definition: subjects ~ create {MML_SET [ANY]}.singleton (target)
 	target_bag_constraint: target.bag ~ sequence.to_bag
 	index_constraint: 0 <= index_ and index_ <= sequence.count + 1
 	box_definition: box ~ if sequence.domain [index_] then create {MML_SET [G]}.singleton (sequence [index_]) else {MML_SET [G]}.empty_set end
+
+note
+	copyright: "Copyright (c) 1984-2021, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 
 end

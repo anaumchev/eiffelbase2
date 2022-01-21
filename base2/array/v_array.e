@@ -1,24 +1,23 @@
-note
+﻿note
 	description: "[
-		Indexable containers with arbitrary bounds, whose elements are stored in a continuous memory area.
-		Random access is constant time, but resizing requires memory reallocation and copying elements, and takes linear time.
-		The logical size of array is the same as the physical size of the underlying memory area.
+			Indexable containers with arbitrary bounds, whose elements are stored in a continuous memory area.
+			Random access is constant time, but resizing requires memory reallocation and copying elements, and takes linear time.
+			The logical size of array is the same as the physical size of the underlying memory area.
 		]"
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: sequence, lower_
 	manual_inv: true
 	false_guards: true
 
-frozen class V_ARRAY [G]
+frozen class
+	V_ARRAY [G]
 
 inherit
 	V_MUTABLE_SEQUENCE [G]
 		redefine
 			is_equal_,
-			lower,
 			upper,
-			item,
-			put,
 			fill,
 			clear,
 			is_model_equal
@@ -48,7 +47,7 @@ feature {NONE} -- Initialization
 			create area.make_filled (({G}).default, upper - lower + 1)
 		ensure
 			sequence_domain_definition: sequence.count = u - l + 1
-			sequence_definition: across 1 |..| sequence.count as i all sequence [i.item] = ({G}).default end
+			sequence_definition: ∀ i: 1 |..| sequence.count ¦ sequence [i] = ({G}).default
 			lower_definition: lower_ = if l <= u then l else 1 end
 			no_observers: observers.is_empty
 		end
@@ -70,7 +69,7 @@ feature {NONE} -- Initialization
 			create area.make_filled (v, u - l + 1)
 		ensure
 			sequence_domain_definition: sequence.count = u - l + 1
-			sequence_definition: across 1 |..| sequence.count as i all sequence [i.item] = v end
+			sequence_definition: ∀ i: 1 |..| sequence.count ¦ sequence [i] = v
 			lower_definition: lower_ = if l <= u then l else 1 end
 			no_observers: observers.is_empty
 		end
@@ -81,8 +80,7 @@ feature -- Initialization
 			-- Initialize by copying all the items of `other'.
 			-- Reallocate memory unless count stays the same.
 		require
-			observers_open: across observers as o all o.item.is_open end
-			modify_model (["sequence", "lower_"], Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		do
 			if other /= Current then
 				check other.inv end
@@ -96,9 +94,10 @@ feature -- Initialization
 				check other.is_wrapped end
 			end
 		ensure
-			observers_open: across observers as o all o.item.is_open end
+			observers_open: ∀ o: observers ¦ o.is_open
 			sequence_effect: sequence ~ old other.sequence
 			lower_effect: lower_ = old other.lower_
+			modify_model (["sequence", "lower_"], Current)
 		end
 
 feature -- Access
@@ -110,6 +109,19 @@ feature -- Access
 			Result := area [i - lower]
 		end
 
+--	lemma_ (l, u, lower__: INTEGER; r_s, s: MML_SEQUENCE [G])
+--		note
+--			status: lemma, pure
+--		require
+--			∀ i: 1 |..| r_s.count ¦ r_s [i] = s [i + lower__ - 1]
+--			r_s.count = (s.count - lower__  + 1)
+--			lower__ = 1
+--		do
+--		ensure
+--			r_s ~ s.interval (lower__, r_s.count + lower__ - 1)
+
+--		end
+
 	subarray (l, u: INTEGER): V_ARRAY [G]
 			-- Array consisting of elements of Current in index range [`l', `u'].
 		note
@@ -118,18 +130,20 @@ feature -- Access
 			l_not_too_small: l >= lower_
 			u_not_too_large: u <= upper_
 			l_not_too_large: l <= u + 1
-			modify_model ("observers", Current)
 		do
+--			check l.item = u.item end
 			create Result.make (l, u)
 			check Result.inv end
 			Result.copy_range (Current, l, u, Result.lower)
-			check across 1 |..| Result.sequence.count as i all Result.sequence [i.item] = sequence [i.item - 1 + idx (l)] end end
+			check ∀ i: 1 |..| Result.sequence.count ¦ Result.sequence [i] = sequence [i - 1 + idx (l)] end
 		ensure
 			result_wrapped: Result.is_wrapped
 			result_fresh: Result.is_fresh
-			result_sequence_definition: Result.sequence ~ sequence.interval (idx(l), idx(u))
-			result_lower_definition: l <= u implies Result.lower_ =  l
+			result_lower_definition: l <= u implies Result.lower_ = l
+			result_upper_definition: l <= u implies Result.upper_ = u
+			result_sequence_definition: Result.sequence ~ sequence.interval (idx (l), idx (u)) --<<--
 			observers_unchanged: observers ~ old observers
+			modify_model ("observers", Current)
 		end
 
 feature -- Measurement
@@ -189,7 +203,7 @@ feature -- Replacement
 		end
 
 	clear (l, u: INTEGER)
-			-- Put default value at positions [`l', `u'].		
+			-- Put default value at positions [`l', `u'].
 		do
 			area.fill_with_default (l - lower, u - lower)
 		end
@@ -202,8 +216,7 @@ feature -- Replacement
 			first_not_too_large: fst <= lst + 1
 			index_not_too_small: index >= lower_
 			enough_space: upper_ - index >= lst - fst
-			observers_open: across observers as o all o.item.is_open end
-			modify_model ("sequence", Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		do
 			if lst >= fst then
 				check area.inv end
@@ -211,9 +224,10 @@ feature -- Replacement
 			end
 		ensure
 			sequence_domain_effect: sequence.count = old sequence.count
-			sequence_effect: across 1 |..| sequence.count as i all if idx (index) <= i.item and i.item < idx (index + lst - fst + 1)
-					then sequence [i.item] = (old sequence) [i.item - index + fst]
-					else sequence [i.item] = (old sequence) [i.item] end end
+			sequence_effect: ∀ i: 1 |..| sequence.count ¦ if idx (index) <= i and i < idx (index + lst - fst + 1)
+					then sequence [i] = (old sequence) [i - index + fst]
+					else sequence [i] = (old sequence) [i] end
+			modify_model ("sequence", Current)
 		end
 
 feature -- Resizing
@@ -225,8 +239,7 @@ feature -- Resizing
 			explicit: wrapping
 		require
 			valid_indexes: l <= u + 1
-			observers_open: across observers as o all o.item.is_open  end
-			modify_model (["sequence", "lower_"], Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		local
 			new_count, x, y: INTEGER
 		do
@@ -242,10 +255,10 @@ feature -- Resizing
 				x := lower.max (l)
 				y := upper.min (u)
 				if x > y then
-					-- No intersection
+						-- No intersection
 					area.fill_with_default (0, area.count - 1)
 				else
-					-- Intersection
+						-- Intersection
 					check area.inv end
 					area.move_data (x - lower, x - l, y - x + 1)
 					area.fill_with_default (0, x - l - 1)
@@ -261,11 +274,12 @@ feature -- Resizing
 		ensure
 			lower_effect: lower_ = if l <= u then l else 1 end
 			upper_effect: upper_ = if l <= u then u else 0 end
-			sequence_effect_old: across 1 |..| sequence.count as k all across 1 |..| sequence.count as j all
-				idx (old lower_) <= k.item and k.item <= idx (old upper_) and j.item = k.item + lower_ - old lower_ implies
-					sequence [k.item] = (old sequence) [j.item] end end
-			sequence_effect_new: across 1 |..| sequence.count as k all
-				k.item < idx (old lower_) or idx (old upper_) < k.item implies sequence [k.item] = ({G}).default end
+			sequence_effect_old: ∀ k: 1 |..| sequence.count ¦ ∀ j: 1 |..| sequence.count ¦	--<<--
+						idx (old lower_) <= k and k <= idx (old upper_) and j = k + lower_ - old lower_ implies
+						sequence [k] = (old sequence) [j]
+			sequence_effect_new: ∀ k: 1 |..| sequence.count ¦	--<<--
+					k < idx (old lower_) or idx (old upper_) < k implies sequence [k] = ({G}).default
+			modify_model (["sequence", "lower_"], Current)
 		end
 
 	include (i: INTEGER)
@@ -274,8 +288,7 @@ feature -- Resizing
 		note
 			explicit: wrapping
 		require
-			observers_open: across observers as o all o.item.is_open  end
-			modify_model (["sequence", "lower_"], Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		do
 			check inv end
 			if is_empty then
@@ -288,11 +301,12 @@ feature -- Resizing
 		ensure
 			lower_effect: lower_ = if old sequence.is_empty then i else i.min (old lower_) end
 			upper_effect: upper_ = if old sequence.is_empty then i else i.max (old upper_) end
-			sequence_effect_old: across 1 |..| sequence.count as k all across 1 |..| sequence.count as j all
-				idx (old lower_) <= k.item and k.item <= idx (old upper_) and j.item = k.item + lower_ - old lower_ implies
-					sequence [k.item] = (old sequence) [j.item] end end
-			sequence_effect_new: across 1 |..| sequence.count as k all
-				k.item < idx (old lower_) or idx (old upper_) < k.item implies sequence [k.item] = ({G}).default end
+			sequence_effect_old: ∀ k: 1 |..| sequence.count ¦ ∀ j: 1 |..| sequence.count ¦
+						idx (old lower_) <= k and k <= idx (old upper_) and j = k + lower_ - old lower_ implies
+						sequence [k] = (old sequence) [j]
+			sequence_effect_new: ∀ k: 1 |..| sequence.count ¦
+					k < idx (old lower_) or idx (old upper_) < k implies sequence [k] = ({G}).default
+			modify_model (["sequence", "lower_"], Current)
 		end
 
 	force (v: G; i: INTEGER)
@@ -301,8 +315,7 @@ feature -- Resizing
 		note
 			explicit: wrapping
 		require
-			observers_open: across observers as o all o.item.is_open  end
-			modify_model (["sequence", "lower_"], Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		do
 			include (i)
 			put (v, i)
@@ -310,18 +323,18 @@ feature -- Resizing
 			lower_effect: lower_ = if old sequence.is_empty then i else i.min (old lower_) end
 			upper_effect: upper_ = if old sequence.is_empty then i else i.max (old upper_) end
 			sequence_effect_i: sequence [idx (i)] = v
-			sequence_effect_old: across 1 |..| sequence.count as k all across 1 |..| sequence.count as j all
-				k.item /= idx (i) and idx (old lower_) <= k.item and k.item <= idx (old upper_) and j.item = k.item + lower_ - old lower_ implies
-					sequence [k.item] = (old sequence) [j.item] end end
-			sequence_effect_new: across 1 |..| sequence.count as k all
-				k.item /= idx (i) and (k.item < idx (old lower_) or idx (old upper_) < k.item) implies sequence [k.item] = ({G}).default end
+			sequence_effect_old: ∀ k: 1 |..| sequence.count ¦ ∀ j: 1 |..| sequence.count ¦
+						k /= idx (i) and idx (old lower_) <= k and k <= idx (old upper_) and j = k + lower_ - old lower_ implies
+						sequence [k] = (old sequence) [j]
+			sequence_effect_new: ∀ k: 1 |..| sequence.count ¦
+					k /= idx (i) and (k < idx (old lower_) or idx (old upper_) < k) implies sequence [k] = ({G}).default
+			modify_model (["sequence", "lower_"], Current)
 		end
 
 	wipe_out
 			-- Remove all elements.
 		require
-			observers_open: across observers as o all o.item.is_open end
-			modify_model (["sequence", "lower_"], Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		do
 			create area.make_empty (0)
 			lower := 1
@@ -329,6 +342,7 @@ feature -- Resizing
 		ensure
 			sequence_effect: sequence.is_empty
 			lower_effect: lower_ = 1
+			modify_model (["sequence", "lower_"], Current)
 		end
 
 feature {V_CONTAINER, V_ITERATOR} -- Implementation
@@ -350,9 +364,21 @@ invariant
 	area_exists: area /= Void
 	lower_definition: lower_ = lower
 	upper_definition: upper = lower_ + sequence.count - 1
-	owns_definition: owns = [ area ]
+	owns_definition: owns ~ create {MML_SET [ANY]}.singleton (area)
 	sequence_implementation: sequence ~ area.sequence
 
 note
 	explicit: observers
+	date: "$Date: 2021-07-15 15:57:26 +0300 (Thu, 15 Jul 2021) $"
+	revision: "$Revision: 105637 $"
+	copyright: "Copyright (c) 1984-2021, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
+
 end

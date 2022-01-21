@@ -1,6 +1,7 @@
-note
+﻿note
 	description: "Linked implementation of queues."
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: sequence
 	manual_inv: true
 	false_guards: true
@@ -34,18 +35,16 @@ feature -- Initialization
 			-- Initialize by copying all the items of `other'.
 		require
 			no_observers: observers.is_empty
-			modify_model ("sequence", Current)
-			modify_field ("closed", other)
 		do
 			if other /= Current then
 				other.unwrap
 				list.copy_ (other.list)
 				other.wrap
-			else
-                		list.wipe_out
 			end
 		ensure then
 			sequence_effect: sequence ~ other.sequence
+			modify_model ("sequence", Current)
+			modify_field ("closed", other)
 		end
 
 feature -- Access
@@ -135,11 +134,21 @@ feature -- Specification
 
 invariant
 	list_exists: list /= Void
-	owns_definition: owns = [list]
+	owns_definition: owns ~ create {MML_SET [ANY]}.singleton (list)
 	sequence_implementation: sequence ~ list.sequence
-	observers_type: across observers as o all attached {V_LINKED_QUEUE_ITERATOR [G]} o.item end
+	observers_type: ∀ o: observers ¦ attached {V_LINKED_QUEUE_ITERATOR [G]} o
 	observers_correspond: list.observers.count <= observers.count
 
 note
 	explicit: observers
+	copyright: "Copyright (c) 1984-2021, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
+
 end

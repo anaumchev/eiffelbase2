@@ -1,6 +1,7 @@
-note
+﻿note
 	description: "Iterators over hash tables."
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: target, sequence, index_
 	manual_inv: true
 	false_guards: true
@@ -29,8 +30,6 @@ feature {NONE} -- Initialization
 			t_wrapped: t.is_wrapped
 			no_observers: observers.is_empty
 			not_observing_t: not t.observers [Current]
-			modify_field (["observers", "closed"], t)
-			modify (Current)
 		local
 			i_: INTEGER
 		do
@@ -44,9 +43,9 @@ feature {NONE} -- Initialization
 				i_ := 2
 			invariant
 				2 <= i_ and i_ <= t.lists.count + 1
-				across 1 |..| t.lists.count as j all t.lists [j.item].is_wrapped end
-				across 1 |..| (i_ - 1) as j all t.lists [j.item].observers = t.lists [j.item].observers.old_ & list_iterator end
-				across i_ |..| t.lists.count as j all t.lists [j.item].observers = t.lists [j.item].observers.old_ end
+				∀ j: 1 |..| t.lists.count ¦ t.lists [j].is_wrapped
+				∀ j: 1 |..| (i_ - 1) ¦ t.lists [j].observers = t.lists [j].observers.old_ & list_iterator
+				∀ j: i_ |..| t.lists.count ¦ t.lists [j].observers = t.lists [j].observers.old_
 				t.inv_only ("A2", "items_locked", "no_duplicates", "valid_buckets")
 				modify_field (["observers", "closed"], t.lists.range)
 			until
@@ -68,6 +67,8 @@ feature {NONE} -- Initialization
 			target_effect: target = t
 			t_observers_effect: t.observers = old t.observers & Current
 			list_iterator.is_fresh
+			modify_field (["observers", "closed"], t)
+			modify (Current)
 		end
 
 feature -- Initialization
@@ -80,8 +81,6 @@ feature -- Initialization
 			target_wrapped: target.is_wrapped
 			other_target_wrapped: other.target.is_wrapped
 			target /= other.target implies not other.target.observers [Current]
-			modify (Current)
-			modify_model ("observers", [target, other.target])
 		do
 			if Current /= other then
 				if target /= other.target then
@@ -99,6 +98,8 @@ feature -- Initialization
 			old_target_observers_effect: other.target /= old target implies (old target).observers = old target.observers / Current
 			other_target_observers_effect: other.target /= old target implies other.target.observers = old other.target.observers & Current
 			target_observers_preserved: other.target = old target implies other.target.observers = old other.target.observers
+			modify (Current)
+			modify_model ("observers", [target, other.target])
 		end
 
 feature -- Access
@@ -125,7 +126,7 @@ feature -- Access
 			use_definition (value_sequence_from (sequence, target.map))
 		end
 
-feature -- Measurement		
+feature -- Measurement
 
 	index: INTEGER
 			-- Current position.
@@ -209,12 +210,12 @@ feature -- Cursor movement
 			c: V_LINKABLE [MML_PAIR [K, V]]
 		do
 			check target.inv_only ("items_locked", "locked_non_void", "locked_definition", "buckets_non_empty", "buckets_lower", "buckets_count", "lists_definition",
-				"owns_definition", "list_observers_same", "domain_not_too_small", "lists_counts", "buckets_content", "no_duplicates", "valid_buckets") end
+						"owns_definition", "list_observers_same", "domain_not_too_small", "lists_counts", "buckets_content", "no_duplicates", "valid_buckets") end
 			check target.lock.inv end
 			bucket_index := target.index (k)
 			c := target.cell_equal (target.buckets [bucket_index], k)
-			check across 1 |..| target.buckets_ [bucket_index].count as j all (target.buckets_ [bucket_index]) [j.item] =
-				target.lists [bucket_index].sequence [j.item].left end end
+			check ∀ j: 1 |..| target.buckets_ [bucket_index].count ¦ (target.buckets_ [bucket_index]) [j] =
+							target.lists [bucket_index].sequence [j].left end
 			if c = Void then
 				bucket_index := target.capacity + 1
 				index_ := concat (target.buckets_).count + 1
@@ -226,7 +227,7 @@ feature -- Cursor movement
 				check list_iterator.inv_only ("sequence_definition") end
 				index_ := concat (target.buckets_.front (bucket_index - 1)).count + list_iterator.index_
 				lemma_single_out (target.buckets_, bucket_index)
-				k.lemma_transitive (sequence [index_], [target.domain_item (k)])
+				k.lemma_transitive (sequence [index_], create {MML_SET [K]}.singleton (target.domain_item (k)))
 			end
 		end
 
@@ -238,7 +239,7 @@ feature -- Cursor movement
 				bucket_index := 1
 			invariant
 				1 <= bucket_index and bucket_index <= target.lists.count + 1
-				across 1 |..| (bucket_index - 1) as j all target.buckets_ [j.item].is_empty end
+				∀ j: 1 |..| (bucket_index - 1) ¦ target.buckets_ [j].is_empty
 				modify_field ("bucket_index", Current)
 			until
 				bucket_index > target.capacity or else not target.buckets [bucket_index].is_empty
@@ -266,7 +267,7 @@ feature -- Cursor movement
 				bucket_index := target.capacity
 			invariant
 				0 <= bucket_index and bucket_index <= target.lists.count
-				across (bucket_index + 1) |..| target.lists.count as j all target.buckets_ [j.item].is_empty end
+				∀ j: (bucket_index + 1) |..| target.lists.count ¦ target.buckets_ [j].is_empty
 				modify_field ("bucket_index", Current)
 			until
 				bucket_index < 1 or else not target.buckets [bucket_index].is_empty
@@ -396,7 +397,6 @@ feature {V_CONTAINER, V_ITERATOR, V_LOCK} -- Implementation
 			not_current: other /= Current
 			same_target: target = other.target
 			target_closed: target.closed
-			modify_model ("index_", Current)
 		do
 			unwrap
 			bucket_index := other.bucket_index
@@ -412,8 +412,13 @@ feature {V_CONTAINER, V_ITERATOR, V_LOCK} -- Implementation
 				check other.list_iterator.inv_only ("sequence_definition", "index_constraint", "cell_not_off") end
 				check list_iterator.inv_only ("sequence_definition") end
 				check target.lists [bucket_index].inv_only ("cells_domain") end
-				list_iterator.go_to_cell (other.list_iterator.active)
-				list_iterator.target.lemma_cells_distinct
+				check other.list_iterator.inv end
+				if attached other.list_iterator.active as a then
+					list_iterator.go_to_cell (a)
+					list_iterator.target.lemma_cells_distinct
+				else
+					check from_condition: False then end
+				end
 			end
 			index_ := other.index_
 
@@ -423,6 +428,7 @@ feature {V_CONTAINER, V_ITERATOR, V_LOCK} -- Implementation
 			is_wrapped
 			other.closed
 			index_effect: index_ = old other.index_
+			modify_model ("index_", Current)
 		end
 
 feature {NONE} -- Implementation
@@ -467,15 +473,13 @@ feature {NONE} -- Implementation
 			bucket_index_in_range: target.lists.domain [bucket_index]
 			list_iterator_after: list_iterator.index_ = target.lists [bucket_index].sequence.count + 1
 			almost_holds: inv_without ("list_iterator_not_off", "box_definition")
-			modify_field (["bucket_index", "closed", "box"], Current)
-			modify (list_iterator)
 		do
 			check target.inv_only ("buckets_exist", "lists_definition", "owns_definition", "buckets_lower", "buckets_count", "list_observers_same", "lists_counts") end
 			from
 				bucket_index := bucket_index + 1
 			invariant
 				bucket_index.old_ < bucket_index and bucket_index <= target.buckets.sequence.count + 1
-				across (bucket_index.old_ + 1) |..| (bucket_index - 1) as i all target.buckets_ [i.item].is_empty end
+				∀ i: (bucket_index.old_ + 1) |..| (bucket_index - 1) ¦ target.buckets_ [i].is_empty
 				modify_field ("bucket_index", Current)
 			until
 				bucket_index > target.capacity or else not target.buckets [bucket_index].is_empty
@@ -499,8 +503,10 @@ feature {NONE} -- Implementation
 			end
 			check list_iterator.inv_only ("sequence_definition") end
 			wrap
- 		ensure
+		ensure
 			wrapped: is_wrapped
+			modify_field (["bucket_index", "closed", "box"], Current)
+			modify (list_iterator)
 		end
 
 	to_prev_bucket
@@ -514,15 +520,13 @@ feature {NONE} -- Implementation
 			bucket_index_in_range: target.lists.domain [bucket_index]
 			list_iterator_before: list_iterator.index_ = 0
 			almost_holds: inv_without ("list_iterator_not_off", "box_definition")
-			modify_field (["bucket_index", "closed", "box"], Current)
-			modify (list_iterator)
 		do
 			check target.inv_only ("buckets_exist", "lists_definition", "owns_definition", "buckets_lower", "buckets_count", "list_observers_same", "lists_counts") end
 			from
 				bucket_index := bucket_index - 1
 			invariant
 				0 <= bucket_index and bucket_index < bucket_index.old_
-				across (bucket_index + 1) |..| (bucket_index.old_ - 1) as i all target.buckets_ [i.item].is_empty end
+				∀ i: (bucket_index + 1) |..| (bucket_index.old_ - 1) ¦ target.buckets_ [i].is_empty
 				modify_field ("bucket_index", Current)
 			until
 				bucket_index < 1 or else not target.buckets [bucket_index].is_empty
@@ -543,8 +547,10 @@ feature {NONE} -- Implementation
 				check target.buckets_.front (bucket_index.old_ - 1).front (bucket_index - 1) = target.buckets_.front (bucket_index - 1) end
 			end
 			wrap
- 		ensure
+		ensure
 			wrapped: is_wrapped
+			modify_field (["bucket_index", "closed", "box"], Current)
+			modify (list_iterator)
 		end
 
 feature {V_CONTAINER, V_ITERATOR} -- Specification
@@ -596,7 +602,7 @@ feature {V_CONTAINER, V_ITERATOR} -- Specification
 		note
 			status: lemma, static
 		require
-			all_empty: across 1 |..| seqs.count as i all seqs [i.item].is_empty end
+			all_empty: ∀ i: 1 |..| seqs.count ¦ seqs [i].is_empty
 		do
 			use_definition (concat (seqs))
 			if seqs.count > 0 then
@@ -614,18 +620,18 @@ feature {V_CONTAINER, V_ITERATOR} -- Specification
 		require
 			target /= Void
 			domain_non_void: m.domain.non_void
-			domain_not_too_small: across 1 |..| bs.count as i all across 1 |..| bs [i.item].count as j all m.domain [(bs [i.item])[j.item]] end end
-			domain_not_too_large: across m.domain as x all across 1 |..| bs.count as i some bs [i.item].has (x.item) end end
-			no_precise_duplicates: across 1 |..| bs.count as i all across 1 |..| bs.count as j all
-					across 1 |..| bs [i.item].count as k all across 1 |..| bs [j.item].count as l all
-							i.item /= j.item or k.item /= l.item implies (bs [i.item])[k.item] /= (bs [j.item])[l.item] end end end end
+			domain_not_too_small: ∀ i: 1 |..| bs.count ¦ ∀ j: 1 |..| bs [i].count ¦ m.domain [(bs [i]) [j]]
+			domain_not_too_large: ∀ x: m.domain ¦ ∃ i: 1 |..| bs.count ¦ bs [i].has (x)
+			no_precise_duplicates: ∀ i: 1 |..| bs.count ¦ ∀ j: 1 |..| bs.count ¦
+						∀ k: 1 |..| bs [i].count ¦ ∀ l: 1 |..| bs [j].count ¦
+								i /= j or k /= l implies (bs [i]) [k] /= (bs [j]) [l]
 		do
 			use_definition (concat (bs))
 			use_definition (value_sequence_from (concat (bs), m))
 			use_definition (target.bag_from (m))
 			if not bs.is_empty then
-				check across 1 |..| (bs.count - 1) as i all bs [i.item] = bs.but_last [i.item] end end
-				check  (m | (m.domain - bs.last.range)).domain = m.domain - bs.last.range end
+				check ∀ i: 1 |..| (bs.count - 1) ¦ bs [i] = bs.but_last [i] end
+				check (m | (m.domain - bs.last.range)).domain = m.domain - bs.last.range end
 				lemma_content (bs.but_last, m | (m.domain - bs.last.range))
 				bs.last.lemma_no_duplicates
 
@@ -646,7 +652,7 @@ feature {V_CONTAINER, V_ITERATOR} -- Specification
 invariant
 	list_iterator_exists: list_iterator /= Void
 	bucket_index_in_bounds: 0 <= bucket_index and bucket_index <= target.lists.count + 1
-	owns_definition: owns = [ list_iterator ]
+	owns_definition: owns ~ create {MML_SET [ANY]}.singleton (list_iterator)
 	target_is_bucket: target.lists.has (list_iterator.target)
 	target_which_bucket: target.lists.domain [bucket_index] implies list_iterator.target = target.lists [bucket_index]
 	list_iterator_not_off: target.lists.domain [bucket_index] implies 1 <= list_iterator.index_ and list_iterator.index_ <= list_iterator.sequence.count
@@ -655,5 +661,15 @@ invariant
 	index_after: bucket_index > target.lists.count implies index_ = concat (target.buckets_).count + 1
 	index_not_off: target.lists.domain [bucket_index] implies index_ = concat (target.buckets_.front (bucket_index - 1)).count + list_iterator.index_
 
+note
+	copyright: "Copyright (c) 1984-2021, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 
 end

@@ -1,8 +1,9 @@
-note
+﻿note
 	description: "[
-		Helper ghost objects that prevent hashable container items from unwanted modifications.
+			Helper ghost objects that prevent hashable container items from unwanted modifications.
 		]"
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	status: ghost
 	model: locked, equivalence, hash
 	manual_inv: true
@@ -24,7 +25,9 @@ feature -- Access
 			-- Cache of hash codes of items from `locked'.
 		note
 			guard: agrees_on_locked
+			status: ghost
 		attribute
+			check is_executable: False then end
 		end
 
 feature -- Basic operations
@@ -50,11 +53,22 @@ feature -- Specification
 			status: functional, nonvariant
 		do
 			Result := (locked <= hash.domain and locked <= new_hash.domain) and then
-				across locked as x all new_hash [x.item] = hash [x.item] end
+				∀ x: locked ¦ new_hash [x] = hash [x]
 		end
 
 invariant
 	hash_domain_definition: locked <= hash.domain
-	hash_definition: across locked as x all hash [x.item] = x.item.hash_code_ end
+	hash_definition: ∀ x: locked ¦ hash [x] = x.hash_code_
+
+note
+	copyright: "Copyright (c) 1984-2021, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 
 end

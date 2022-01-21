@@ -1,12 +1,13 @@
 note
 	description: "Iterators over sets, allowing efficient search."
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: target, sequence, index_
 	manual_inv: true
 	false_guards: true
 
 deferred class
-	V_SET_ITERATOR [G]
+	V_SET_ITERATOR [G -> ANY]
 
 inherit
 	V_ITERATOR [G]
@@ -30,11 +31,11 @@ feature -- Cursor movement
 			target_closed: target.closed
 			lock_wrapped: target.lock.is_wrapped
 			v_locked: target.lock.locked [v]
-			modify_model ("index_", Current)
 		deferred
 		ensure
 			index_effect_found: target.set_has (v) implies sequence [index_] = target.set_item (v)
 			index_effect_not_found: not target.set_has (v) implies index_ = sequence.count + 1
+			modify_model ("index_", Current)
 		end
 
 feature -- Removal
@@ -45,15 +46,15 @@ feature -- Removal
 			not_off: not off
 			target_wrapped: target.is_wrapped
 			lock_wrapped: target.lock.is_wrapped
-			only_iterator: target.observers = [Current]
-			modify_model (["sequence", "box"], Current)
-			modify_model ("set", target)
+			only_iterator: target.observers ~ create {MML_SET [ANY]}.singleton (Current)
 		deferred
 		ensure
 			sequence_effect: sequence ~ old sequence.removed_at (index_)
 			target_set_effect: target.set ~ old (target.set / sequence [index_])
 			target_wrapped: target.is_wrapped
 			index_ = old index_
+			modify_model (["sequence", "box"], Current)
+			modify_model ("set", target)
 		end
 
 feature -- Specification
@@ -69,4 +70,14 @@ feature -- Specification
 invariant
 	target_set_constraint: target.set ~ sequence.range
 
+note
+	copyright: "Copyright (c) 1984-2018, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 end

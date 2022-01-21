@@ -1,6 +1,7 @@
-note
+﻿note
 	description: "Iterators over linked lists."
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: target, index_
 	manual_inv: true
 	false_guards: true
@@ -25,9 +26,6 @@ feature {V_CONTAINER, V_ITERATOR} -- Initialization
 			-- Create iterator over `list'.
 		note
 			status: creator
-		require
-			modify (Current)
-			modify_field (["observers", "closed"], list)
 		do
 			target := list
 			target.add_iterator (Current)
@@ -37,6 +35,8 @@ feature {V_CONTAINER, V_ITERATOR} -- Initialization
 			target_effect: target = list
 			index_effect: index_ = 0
 			list_observers_effect: list.observers = old list.observers & Current
+			modify (Current)
+			modify_field (["observers", "closed"], list)
 		end
 
 	switch_target (list: V_LINKED_LIST [G])
@@ -45,7 +45,6 @@ feature {V_CONTAINER, V_ITERATOR} -- Initialization
 			is_wrapped
 			list_closed: list.closed
 			has_observer: list.observers [Current]
-			modify_model (["target", "index_", "subjects", "sequence"], Current)
 		do
 			unwrap
 			target := list
@@ -60,6 +59,7 @@ feature {V_CONTAINER, V_ITERATOR} -- Initialization
 			target_effect: target = list
 			index_effect: index_ = 0
 			default_owns: owns.is_empty
+			modify_model (["target", "index_", "subjects", "sequence"], Current)
 		end
 
 feature -- Initialization
@@ -71,8 +71,6 @@ feature -- Initialization
 		require
 			target_wrapped: target.is_wrapped
 			other_target_wrapped: other.target.is_wrapped
-			modify (Current)
-			modify_model ("observers", [target, other.target])
 		do
 			if Current /= other then
 				check other.inv_only ("index_constraint", "after_definition", "sequence_definition", "cell_off", "cell_not_off", "default_owns") end
@@ -87,13 +85,7 @@ feature -- Initialization
 				check target.inv_only ("bag_definition", "cells_domain") end
 				target.lemma_cells_distinct
 				wrap
-        		else
-                		unwrap
-                		index_ := 0
-                		after_ := False
-                		active := Void
-                		wrap
-    			end
+			end
 		ensure
 			target_effect: target = other.target
 			index_effect: index_ = other.index_
@@ -102,6 +94,8 @@ feature -- Initialization
 			old_target_observers_effect: other.target /= old target implies (old target).observers = old target.observers / Current
 			other_target_observers_effect: other.target /= old target implies other.target.observers = old other.target.observers & Current
 			target_observers_preserved: other.target = old target implies other.target.observers = old other.target.observers
+			modify (Current)
+			modify_model ("observers", [target, other.target])
 		end
 
 feature -- Access
@@ -114,7 +108,11 @@ feature -- Access
 		do
 			check inv end
 			check target.inv end
-			Result := active.item
+			if attached active as a then
+				Result := a.item
+			else
+				check from_precondition: False then end
+			end
 		end
 
 feature -- Measurement
@@ -174,7 +172,7 @@ feature -- Status report
 feature -- Comparison
 
 	is_equal_ (other: like Current): BOOLEAN
-			-- Is iterator traversing the same container and is at the same position at `other'?		
+			-- Is iterator traversing the same container and is at the same position at `other'?
 		do
 			check inv; other.inv end
 			Result := target = other.target and active = other.active and after_ = other.after_
@@ -201,10 +199,14 @@ feature -- Cursor movement
 		end
 
 	forth
-			-- Move one position forward.		
+			-- Move one position forward.
 		do
 			check target.inv end
-			active := active.right
+			if attached active as a then
+				active := a.right
+			else
+				check from_precondition: False then end
+			end
 			index_ := index_ + 1
 			after_ := active = Void
 		end
@@ -227,10 +229,10 @@ feature -- Cursor movement
 				invariant
 					1 <= index_ and index_ < index_.old_
 					inv_only ("cell_not_off", "after_definition", "default_owns")
-					across 1 |..| index_ as i all target.cells [i.item] /= old_active end
+					∀ i: 1 |..| index_ ¦ target.cells [i] /= old_active
 					is_wrapped
 				until
-					active.right = old_active
+					attached active as a implies a.right = old_active
 				loop
 					forth
 				variant
@@ -263,7 +265,11 @@ feature -- Replacement
 	put (v: G)
 			-- Replace item at current position with `v'.
 		do
-			target.put_cell (v, active, index_)
+			if attached active as a then
+				target.put_cell (v, a, index_)
+			else
+				check from_precondition: False then end
+			end
 			check target.inv_only ("bag_definition") end
 		end
 
@@ -295,7 +301,11 @@ feature -- Extension
 	extend_right (v: G)
 			-- Insert `v' to the right of current position. Do not move cursor.
 		do
-			target.extend_after (create {V_LINKABLE [G]}.put (v), active, index_)
+			if attached active as a then
+				target.extend_after (create {V_LINKABLE [G]}.put (v), a, index_)
+			else
+				check from_precondition: False then end
+			end
 			check target.inv_only ("bag_definition") end
 		ensure then
 			cell_sequence_front_preserved: target.cells.old_.front (index_) ~ target.cells.front (index_)
@@ -335,6 +345,7 @@ feature -- Extension
 			from
 				check inv_only ("subjects_definition", "no_observers", "A2") end
 				check other.inv_only ("target_exists", "subjects_definition", "index_constraint") end
+				create s
 			invariant
 				1 <= index_.old_ and index_.old_ <= index_ and index_ <= sequence.count
 				1 <= other.index_.old_ and other.index_.old_ <= other.index_ and other.index_ <= other.sequence.count + 1
@@ -343,10 +354,10 @@ feature -- Extension
 				other.is_wrapped
 				target.is_wrapped
 				target /= Current
-				across target.observers as o all o.item /= Current implies o.item.is_open end
+				∀ o: target.observers ¦ o /= Current implies o.is_open
 				s = other.sequence.old_.interval (other.index_.old_, other.index_ - 1)
 				target.sequence ~ (target.sequence.front (index_.old_).old_ +
-					s + target.sequence.tail (index_.old_ + 1).old_)
+							s + target.sequence.tail (index_.old_ + 1).old_)
 				target.observers ~ target.observers.old_
 				other.sequence ~ other.sequence.old_
 			until
@@ -372,10 +383,8 @@ feature -- Extension
 			other_wrapped: other.is_wrapped
 			other_not_target: other /= target
 			not_after: index_ <= sequence.count
-			observers_open: across target.observers as o all o.item /= Current implies o.item.is_open end
-			other_observers_open: across other.observers as o all o.item.is_open end
-			modify_model ("sequence", Current)
-			modify_model ("sequence", [target, other])
+			observers_open: ∀ o: target.observers ¦ o /= Current implies o.is_open
+			other_observers_open: ∀ o: other.observers ¦ o.is_open
 		do
 			target.merge_after (other, active, index_)
 			check target.inv_only ("cells_domain", "bag_definition") end
@@ -383,6 +392,8 @@ feature -- Extension
 		ensure
 			sequence_effect: sequence ~ old (sequence.front (index_) + other.sequence + sequence.tail (index_ + 1))
 			other_sequence_effect: other.sequence.is_empty
+			modify_model ("sequence", Current)
+			modify_model ("sequence", [target, other])
 		end
 
 feature -- Removal
@@ -422,17 +433,21 @@ feature -- Removal
 	remove_right
 			-- Remove element to the right of current position. Do not move cursor.
 		do
-			target.remove_after (active, index_)
+			if attached active as a then
+				target.remove_after (a, index_)
+			else
+				check from_precondition: False then end
+			end
 			check target.inv_only ("bag_definition") end
 		end
 
 feature {V_ITERATOR} -- Implementation
 
-	active: V_LINKABLE [G]
+	active: detachable V_LINKABLE [G]
 			-- Cell at current position.
 
 	after_: BOOLEAN
-			-- Is current position after the last container position?			
+			-- Is current position after the last container position?
 
 	active_index: INTEGER
 			-- Distance from `target.first_cell' to `active'.
@@ -455,7 +470,11 @@ feature {V_ITERATOR} -- Implementation
 				c = active
 			loop
 				Result := Result + 1
-				c := c.right
+				if attached c then
+					c := c.right
+				else
+					check from_loop_invariant: False end
+				end
 			variant
 				target.count_ - Result
 			end
@@ -469,7 +488,6 @@ feature {V_ITERATOR} -- Implementation
 			wrapped: is_wrapped
 			target_closed: target.closed
 			c_in_list: target.cells.has (c)
-			modify_model ("index_", Current)
 		do
 			check target.inv end
 			unwrap
@@ -480,6 +498,7 @@ feature {V_ITERATOR} -- Implementation
 		ensure
 			index_effect: target.cells [index_] = c
 			wrapped: is_wrapped
+			modify_model ("index_", Current)
 		end
 
 invariant
@@ -488,5 +507,16 @@ invariant
 	target_cells_domain: target.cells.count = sequence.count
 	cell_not_off: 1 <= index_ and index_ <= sequence.count implies active = target.cells [index_]
 	target_cells_distinct: target.cells.no_duplicates
+
+note
+	copyright: "Copyright (c) 1984-2021, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 
 end

@@ -1,9 +1,10 @@
-note
+﻿note
 	description: "[
-		Two-dimensional arrays.
-		Indexing of rows and columns starts from 1.
+			Two-dimensional arrays.
+			Indexing of rows and columns starts from 1.
 		]"
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: sequence, column_count
 	manual_inv: true
 	false_guards: true
@@ -20,7 +21,6 @@ inherit
 		redefine
 			upper,
 			is_equal_,
-			flat_put,
 			is_model_equal
 		end
 
@@ -71,9 +71,7 @@ feature -- Initialization
 	copy_ (other: like Current)
 			-- Initialize by copying all the items of `other'.
 		require
-			observers_open: across observers as o all o.item.is_open end
-			modify_model (["sequence", "column_count"], Current)
-			modify_field ("closed", other)
+			observers_open: ∀ o: observers ¦ o.is_open
 		do
 			if other /= Current then
 				row_count := other.row_count
@@ -82,15 +80,13 @@ feature -- Initialization
 				create array.copy_ (other.array)
 				other.wrap
 				sequence := other.sequence
-			else
-		                array.wipe_out
-                		row_count := 0
-                		column_count := 0
 			end
 		ensure then
 			sequence_effect: sequence ~ other.sequence
 			column_count_effect: column_count = other.column_count
-			observers_open: across observers as o all o.item.is_open end
+			observers_open: ∀ o: observers ¦ o.is_open
+			modify_model (["sequence", "column_count"], Current)
+			modify_field ("closed", other)
 		end
 
 feature -- Access
@@ -222,13 +218,13 @@ feature -- Replacement
 		require
 			valid_row: has_row (i)
 			valid_column: has_column (j)
-			observers_open: across observers as o all o.item.is_open end
-			modify_model ("sequence", Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		do
 			check inv end
 			flat_put (v, flat_index (i, j))
 		ensure
 			sequence_effect: sequence ~ old sequence.replaced_at (flat_index (i, j), v)
+			modify_model ("sequence", Current)
 		end
 
 	flat_put (v: G; i: INTEGER)
@@ -255,7 +251,7 @@ feature -- Specification
 
 invariant
 	array_exists: array /= Void
-	owns_definition: owns = [array]
+	owns_definition: owns ~ create {MML_SET [ANY]}.singleton (array)
 	array_lower_definition: array.lower_ = 1
 	array_no_observers: array.observers.is_empty
 	sequence_implementation: sequence = array.sequence
@@ -263,5 +259,18 @@ invariant
 	column_count_empty: sequence.is_empty implies column_count = 0
 	column_count_nonempty: not sequence.is_empty implies column_count > 0
 	row_count_definition: row_count * column_count = sequence.count
+
+note
+	date: "$Date: 2021-07-15 15:57:26 +0300 (Thu, 15 Jul 2021) $"
+	revision: "$Revision: 105637 $"
+	copyright: "Copyright (c) 1984-2021, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 
 end

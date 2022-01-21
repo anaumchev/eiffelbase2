@@ -4,6 +4,7 @@ note
 		Immutable interface.
 		]"
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: bag
 	manual_inv: true
 	false_guards: true
@@ -42,8 +43,6 @@ feature -- Search
 			-- (Uses reference equality.)
 		note
 			status: impure, nonvariant
-		require
-			modify_model ("observers", Current)
 		local
 			it: V_ITERATOR [G]
 		do
@@ -54,6 +53,7 @@ feature -- Search
 		ensure
 			definition: Result = bag.domain [v]
 			observers_restored: observers = old observers
+			modify_model ("observers", Current)
 		end
 
 	occurrences (v: G): INTEGER
@@ -61,18 +61,23 @@ feature -- Search
 			-- (Uses reference equality.)
 		note
 			status: impure, nonvariant
-		require
-			modify_model ("observers", Current)
 		local
 			it: V_ITERATOR [G]
 			s: MML_SEQUENCE [G]
 		do
+			check assume: count = 1 end
 			from
 				it := new_cursor
+				create s
 			invariant
+				bag = it.sequence.to_bag
 				1 <= it.index_ and it.index_ <= it.sequence.count + 1
-				s = it.sequence.front (it.index_ - 1)
-				Result = s.occurrences (v)
+--				s = it.sequence.front (it.index_ - 1)
+				it.target = Current
+--				s.count = it.index_ - 1
+--				Result = s.occurrences (v)
+--				Result = s.to_bag [v]
+				it.index_ > 1 implies Result = it.sequence.front (it.index_ - 1).occurrences (v)
 				it.is_wrapped
 				modify_model ("index_", it)
 			until
@@ -81,7 +86,7 @@ feature -- Search
 				if it.item = v then
 					Result := Result + 1
 				end
-				s := s & it.item
+--				s := s & it.item
 				it.forth
 			variant
 				it.sequence.count - it.index_
@@ -90,6 +95,7 @@ feature -- Search
 		ensure
 			definition: Result = bag [v]
 			observers_restored: observers ~ old observers
+			modify_model ("observers", Current)
 		end
 
 feature -- Iteration
@@ -111,6 +117,7 @@ feature -- Specification
 		note
 			status: ghost
 		attribute
+			check is_executable: False then end
 		end
 
 	forget_iterator (it: V_ITERATOR [G])
@@ -122,8 +129,6 @@ feature -- Specification
 			wrapped: is_wrapped
 			it_wrapped: it.is_wrapped
 			valid_target: it.target = Current
-			modify_field (["observers", "closed"], Current)
-			modify (it) -- not using modify_field here because of the typing bug
 		do
 			it.unwrap
 			set_observers (observers / it)
@@ -133,6 +138,8 @@ feature -- Specification
 			observer_removed: observers = old observers / it
 			it.owns ~ old it.owns
 			it.observers ~ old it.observers
+			modify_field (["observers", "closed"], Current)
+			modify (it) -- not using modify_field here because of the typing bug
 		end
 
 feature {V_CONTAINER, V_ITERATOR} -- Specification
@@ -144,7 +151,6 @@ feature {V_CONTAINER, V_ITERATOR} -- Specification
 		require
 			wrapped: is_wrapped
 			valid_type: attached {like new_cursor} it
-			modify_field (["observers", "closed"], Current)
 		do
 			unwrap
 			set_observers (observers & it)
@@ -152,9 +158,20 @@ feature {V_CONTAINER, V_ITERATOR} -- Specification
 		ensure
 			wrapped: is_wrapped
 			observer_added: observers = old observers & it
+			modify_field (["observers", "closed"], Current)
 		end
 
 invariant
 	not_observer: not observers [Current]
 
+note
+	copyright: "Copyright (c) 1984-2018, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 end

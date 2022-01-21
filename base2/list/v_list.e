@@ -1,9 +1,10 @@
-note
+﻿note
 	description: "[
-		Indexable containers, where elements can be inserted and removed at any position. 
-		Indexing starts from 1.
+			Indexable containers, where elements can be inserted and removed at any position. 
+			Indexing starts from 1.
 		]"
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: sequence
 	manual_inv: true
 	false_guards: true
@@ -65,32 +66,32 @@ feature -- Extension
 	extend_front (v: G)
 			-- Insert `v' at the front.
 		require
-			observers_open: across observers as o all o.item.is_open end
-			modify_model ("sequence", Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		deferred
 		ensure
 			sequence_effect: sequence ~ old sequence.prepended (v)
+			modify_model ("sequence", Current)
 		end
 
 	extend_back (v: G)
 			-- Insert `v' at the back.
 		require
-			observers_open: across observers as o all o.item.is_open end
-			modify_model ("sequence", Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		deferred
 		ensure
 			sequence_effect: sequence ~ old (sequence & v)
+			modify_model ("sequence", Current)
 		end
 
 	extend_at (v: G; i: INTEGER)
 			-- Insert `v' at position `i'.
 		require
 			valid_index: 1 <= i and i <= sequence.count + 1
-			observers_open: across observers as o all o.item.is_open end
-			modify_model ("sequence", Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		deferred
 		ensure
 			sequence_effect: sequence ~ old sequence.extended_at (i, v)
+			modify_model ("sequence", Current)
 		end
 
 	append (input: V_ITERATOR [G])
@@ -102,9 +103,7 @@ feature -- Extension
 			different_target: input.target /= Current
 			input_target_wrapped: input.target.is_wrapped
 			not_before: not input.before
-			observers_open: across observers as o all o.item.is_open end
-			modify_model ("sequence", Current)
-			modify_model ("index_", input)
+			observers_open: ∀ o: observers ¦ o.is_open
 		do
 			from
 			invariant
@@ -124,6 +123,8 @@ feature -- Extension
 		ensure
 			sequence_effect: sequence ~ old (sequence + input.sequence.tail (input.index_))
 			input_index_effect: input.index_ = input.sequence.count + 1
+			modify_model ("sequence", Current)
+			modify_model ("index_", input)
 		end
 
 	prepend (input: V_ITERATOR [G])
@@ -133,14 +134,14 @@ feature -- Extension
 			different_target: input.target /= Current
 			input_target_wrapped: input.target.is_wrapped
 			not_before: not input.before
-			observers_open: across observers as o all o.item.is_open end
-			modify_model (["sequence", "observers"], Current)
-			modify_model ("index_", input)
+			observers_open: ∀ o: observers ¦ o.is_open
 		deferred
 		ensure
 			sequence_effect: sequence ~ old (input.sequence.tail (input.index_) + sequence)
 			input_index_effect: input.index_ = input.sequence.count + 1
 			observers_preserved: observers ~ old observers
+			modify_model (["sequence", "observers"], Current)
+			modify_model ("index_", input)
 		end
 
 	insert_at (input: V_ITERATOR [G]; i: INTEGER)
@@ -151,14 +152,14 @@ feature -- Extension
 			different_target: input.target /= Current
 			input_target_wrapped: input.target.is_wrapped
 			not_before: not input.before
-			observers_open: across observers as o all o.item.is_open end
-			modify_model (["sequence", "observers"], Current)
-			modify_model ("index_", input)
+			observers_open: ∀ o: observers ¦ o.is_open
 		deferred
 		ensure
 			sequence_effect: sequence ~ old (sequence.front (i - 1) + input.sequence.tail (input.index_) + sequence.tail (i))
 			input_index_effect: input.index_ = input.sequence.count + 1
 			observers_preserved: observers ~ old observers
+			modify_model (["sequence", "observers"], Current)
+			modify_model ("index_", input)
 		end
 
 feature -- Removal
@@ -167,33 +168,33 @@ feature -- Removal
 			-- Remove first element.
 		require
 			not_empty: not is_empty
-			observers_open: across observers as o all o.item.is_open end
-			modify_model ("sequence", Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		deferred
 		ensure
 			sequence_effect: sequence ~ old sequence.but_first
+			modify_model ("sequence", Current)
 		end
 
 	remove_back
 			-- Remove last element.
 		require
 			not_empty: not is_empty
-			observers_open: across observers as o all o.item.is_open end
-			modify_model ("sequence", Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		deferred
 		ensure
 			sequence_effect: sequence ~ old sequence.but_last
+			modify_model ("sequence", Current)
 		end
 
 	remove_at (i: INTEGER)
 			-- Remove element at position `i'.
 		require
 			has_index: 1 <= i and i <= sequence.count
-			observers_open: across observers as o all o.item.is_open end
-			modify_model ("sequence", Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		deferred
 		ensure
 			sequence_effect: sequence ~ old sequence.removed_at (i)
+			modify_model ("sequence", Current)
 		end
 
 	remove (v: G)
@@ -202,8 +203,7 @@ feature -- Removal
 			status: nonvariant
 		require
 			has: sequence.has (v)
-			observers_open: across observers as o all o.item.is_open end
-			modify_model (["sequence", "observers"], Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		local
 			i: V_LIST_ITERATOR [G]
 		do
@@ -213,11 +213,12 @@ feature -- Removal
 			check i.inv_only ("target_bag_constraint", "sequence_definition") end
 			forget_iterator (i)
 		ensure
-			sequence_effect: across 1 |..| sequence.count.old_ as j some
-					sequence.old_ [j.item] = v and
-					not sequence.old_.front (j.item - 1).has (v) and
-					sequence ~ sequence.old_.removed_at (j.item) end
+			sequence_effect: ∃ j: 1 |..| sequence.count.old_ ¦
+					sequence.old_ [j] = v and
+					not sequence.old_.front (j - 1).has (v) and
+					sequence ~ sequence.old_.removed_at (j)
 			observers_restored: observers ~ old observers
+			modify_model (["sequence", "observers"], Current)
 		end
 
 	remove_all (v: G)
@@ -225,8 +226,7 @@ feature -- Removal
 		note
 			status: nonvariant
 		require
-			observers_open: across observers as o all o.item.is_open end
-			modify_model (["sequence", "observers"], Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		local
 			i: V_LIST_ITERATOR [G]
 			n_, j_: INTEGER
@@ -242,7 +242,7 @@ feature -- Removal
 				not sequence.front (i.index_ - 1).has (v)
 				sequence.count + n_ = sequence.old_.count
 				sequence.front (i.index_ - 1) = removed_all (sequence.old_.front (i.index_ + n_ - 1), v)
-				across i.index_ |..| sequence.count as j all sequence [j.item] = sequence.old_[j.item + n_] end
+				∀ j: i.index_ |..| sequence.count ¦ sequence [j] = sequence.old_ [j + n_]
 				n_ >= 0
 				modify_model ("sequence", Current)
 				modify_model (["index_", "sequence"], i)
@@ -269,22 +269,23 @@ feature -- Removal
 		ensure
 			sequence_effect: sequence ~ removed_all (old sequence, v)
 			observers_restored: observers ~ old observers
+			modify_model (["sequence", "observers"], Current)
 		end
 
 	wipe_out
 			-- Remove all elements.
 		require
-			observers_open: across observers as o all o.item.is_open end
-			modify_model ("sequence", Current)
+			observers_open: ∀ o: observers ¦ o.is_open
 		deferred
 		ensure
 			sequence_effect: sequence.is_empty
+			modify_model ("sequence", Current)
 		end
 
 feature {V_LIST, V_LIST_ITERATOR} -- Implementation
 
 	count_: INTEGER
-			-- Number of elements.		
+			-- Number of elements.
 
 feature -- Specification
 
@@ -304,7 +305,7 @@ feature -- Specification
 			reads ([])
 		do
 			Result := if s.is_empty then s else
-				if s.last = x then removed_all (s.but_last, x) else removed_all (s.but_last, x) & s.last end end
+					if s.last = x then removed_all (s.but_last, x) else removed_all (s.but_last, x) & s.last end end
 		ensure
 			not Result.has (x)
 			not s.has (x) implies Result = s
@@ -330,5 +331,16 @@ feature -- Specification
 invariant
 	lower_definition: lower_ = 1
 	count_definition: count_ = sequence.count
+
+note
+	copyright: "Copyright (c) 1984-2021, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 
 end

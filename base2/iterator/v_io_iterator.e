@@ -1,6 +1,7 @@
-note
+﻿note
 	description: "Iterators to read and write from/to a container in linear order."
 	author: "Nadia Polikarpova"
+	revised_by: "Alexander Kogtenkov"
 	model: target, sequence, index_
 	manual_inv: true
 	false_guards: true
@@ -27,14 +28,14 @@ feature -- Replacement
 		require
 			not_off: not off
 			target_wrapped: target.is_wrapped
-			target_observers_open: across target.observers as o all o.item /= Current implies o.item.is_open end
-			modify_model (["sequence", "box"], Current)
-			modify_model ("bag", target)
+			target_observers_open: ∀ o: target.observers ¦ o /= Current implies o.is_open
 		deferred
 		ensure
 			sequence_effect: sequence ~ old sequence.replaced_at (index_, v)
 			target_wrapped: target.is_wrapped
 			target_bag_effect: target.bag ~ old ((target.bag / sequence [index_]) & v)
+			modify_model (["sequence", "box"], Current)
+			modify_model ("bag", target)
 		end
 
 	output (v: G)
@@ -71,5 +72,16 @@ feature -- Specification
 
 invariant
 	off_definition: off_ = not sequence.domain [index_]
+
+note
+	copyright: "Copyright (c) 1984-2021, Eiffel Software and others"
+	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
+	source: "[
+			Eiffel Software
+			5949 Hollister Ave., Goleta, CA 93117 USA
+			Telephone 805-685-1006, Fax 805-685-6869
+			Website http://www.eiffel.com
+			Customer support http://support.eiffel.com
+		]"
 
 end
