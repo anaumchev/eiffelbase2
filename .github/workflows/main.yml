@@ -66,4 +66,5 @@ jobs:
       - name: Check proofs
         run:
           ls -la EIFGENs/base/Proofs/
+          ./usr/local/Eiffel_21.11/studio/tools/boogie/boogie EIFGENs/base/Proofs/autoproof0.bpl 
 
