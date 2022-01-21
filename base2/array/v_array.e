@@ -9,8 +9,7 @@ note
 	manual_inv: true
 	false_guards: true
 
-frozen class
-	V_ARRAY [G]
+frozen class V_ARRAY [G]
 
 inherit
 	V_MUTABLE_SEQUENCE [G]
