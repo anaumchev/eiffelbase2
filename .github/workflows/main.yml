@@ -61,8 +61,7 @@ jobs:
 
       - name: Run AutoProof
         run:      
-          #./usr/local/Eiffel_21.11/studio/spec/$ISE_PLATFORM/bin/
-          ec_ap -verify V_ARRAY -config base.ecf -target base
+          ./usr/local/Eiffel_21.11/studio/spec/$ISE_PLATFORM/bin/ec_ap -verify V_ARRAY -config base.ecf -target base
         env:
           ISE_EIFFEL: ${{ github.workspace }}/usr/local/Eiffel_21.11
           ISE_PLATFORM: linux-x86-64
