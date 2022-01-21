@@ -60,4 +60,4 @@ jobs:
 
       - name: Run AutoProof
         run: |
-          ec_ap
+          $PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin/ec_ap
