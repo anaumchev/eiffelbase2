@@ -56,4 +56,5 @@ jobs:
           ISE_EIFFEL=$PWD/Eiffel_21.11
           ISE_PLATFORM=linux-x86-64
           PATH=$PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin        
-          $ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin/ec_ap
+          # $ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin/ec_ap
+          ec_ap
