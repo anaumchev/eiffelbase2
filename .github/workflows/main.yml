@@ -57,5 +57,9 @@ jobs:
         env:
           ISE_EIFFEL: ${{ github.workspace }}/usr/local/Eiffel_21.11
           ISE_PLATFORM: linux-x86-64
-          PATH: $PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin          
+          PATH: $PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin
+          
+      - name: Check proofs
+        run:
+          ls -la EIFGENs/base/Proofs/
 
