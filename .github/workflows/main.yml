@@ -60,4 +60,4 @@ jobs:
 
       - name: Run AutoProof
         run: |
-          ./Eiffel_21.11/studio/spec/linux-x86-64/bin/ec_ap
+          ec_ap
