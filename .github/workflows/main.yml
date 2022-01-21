@@ -55,7 +55,7 @@ jobs:
         run:      
           ./Eiffel_21.11/studio/spec/$ISE_PLATFORM/bin/ec_ap      
         env:
-          ISE_EIFFEL: $PWD/Eiffel_21.11
+          ISE_EIFFEL: ${GITHUB_WORKSPACE}/Eiffel_21.11
           ISE_PLATFORM: linux-x86-64
           PATH: $PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin          
 
