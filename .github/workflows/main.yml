@@ -57,4 +57,7 @@ jobs:
           ISE_PLATFORM=linux-x86-64
           PATH=$PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin        
           # $ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin/ec_ap
+          echo $ISE_EIFFEL
+          echo $ISE_PLATFORM
+          echo $PATH
           ec_ap
