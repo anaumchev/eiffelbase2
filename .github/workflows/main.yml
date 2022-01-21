@@ -49,7 +49,14 @@ jobs:
           
       - name: Print platform
         run: |
-          uname -p          
+          uname -p
+          
+      - name: Set variables
+        run: |
+          ISE_EIFFEL=$PWD/Eiffel_21.11
+          ISE_PLATFORM=linux-x86-64
+          PATH=$PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin
+          echo $PATH
 
       - name: Run AutoProof
         run: |
