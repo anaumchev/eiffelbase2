@@ -25,6 +25,14 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      - name: Install z3
+        run:
+          sudo apt-get install -y z3
+
+      - name: Install .NET
+        run:
+          sudo apt-get install -y dotnet-runtime-6.0
+
       # Runs a set of commands using the runners shell
       - name: Download AutoProof distribution
         run: |
@@ -53,9 +61,16 @@ jobs:
 
       - name: Run AutoProof
         run:      
-          ./usr/local/Eiffel_21.11/studio/spec/$ISE_PLATFORM/bin/ec_ap -verify V_ARRAY2 -config base.ecf -target base
+          ./usr/local/Eiffel_21.11/studio/spec/$ISE_PLATFORM/bin/ec_ap -verify V_ARRAY -config base.ecf -target base
         env:
           ISE_EIFFEL: ${{ github.workspace }}/usr/local/Eiffel_21.11
           ISE_PLATFORM: linux-x86-64
-          PATH: $PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin          
+          PATH: $PATH:$ISE_EIFFEL/studio/spec/$ISE_PLATFORM/bin
+          
+      - name: Run boogie
+        run:
+          ./usr/local/Eiffel_21.11/studio/tools/boogie/boogie EIFGENs/base/Proofs/autoproof0.bpl 
 
+      - name: Run z3
+        run:
+          z3
