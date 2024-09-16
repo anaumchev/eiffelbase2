@@ -1,5 +1,4 @@
-note
-	explicit:wrapping
+note explicit:wrapping
 class COMPLETENESS_CHECKS [G]
 feature
 
